@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Doanh Thu - Trà Sữa Hoa Sen - Tháng 03/2026</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --primary: #d63384;
+  --primary-light: #f8b3d1;
+  --primary-dark: #a02261;
+  --secondary: #6c757d;
+  --success: #198754;
+  --warning: #ffc107;
+  --danger: #dc3545;
+  --info: #0dcaf0;
+  --bg: #f5f6fa;
+  --card-bg: #ffffff;
+  --text: #1a1d29;
+  --text-muted: #6c757d;
+  --border: #e5e7eb;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  padding: 20px;
+}
+.container { max-width: 1400px; margin: 0 auto; }
+.header {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #fff;
+  padding: 30px 32px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(214, 51, 132, 0.25);
+}
+.header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+.header p { font-size: 15px; opacity: 0.95; }
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 28px 0 14px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title::before {
+  content: '';
+  width: 4px;
+  height: 22px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 8px;
+}
+.kpi-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border-left: 4px solid var(--primary);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+.kpi-card.green { border-left-color: var(--success); }
+.kpi-card.blue { border-left-color: var(--info); }
+.kpi-card.orange { border-left-color: var(--warning); }
+.kpi-card.purple { border-left-color: #8b5cf6; }
+.kpi-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.kpi-value { font-size: 24px; font-weight: 700; color: var(--text); }
+.kpi-sub { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+.chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 8px;
+}
+.chart-grid.single { grid-template-columns: 1fr; }
+.chart-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.chart-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+.chart-card .chart-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+.chart-wrapper { position: relative; height: 340px; }
+.chart-wrapper.tall { height: 420px; }
+.summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  padding: 14px;
+  background: #fdf2f8;
+  border-radius: 10px;
+  margin-top: 12px;
+}
+.summary-row .item .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+.summary-row .item .val { font-size: 16px; font-weight: 700; color: var(--primary-dark); }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+thead th {
+  background: #fdf2f8;
+  color: var(--primary-dark);
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+thead th:hover { background: #fce7f3; }
+thead th.numeric { text-align: right; }
+thead th .sort-icon { font-size: 10px; margin-left: 4px; opacity: 0.5; }
+thead th.sorted .sort-icon { opacity: 1; color: var(--primary); }
+tbody td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+}
+tbody td.numeric { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr:hover { background: #fef3f7; }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-hn { background: #fce7f3; color: #be185d; }
+.badge-hp { background: #dbeafe; color: #1e40af; }
+.badge-bn { background: #fef3c7; color: #92400e; }
+.badge-bg { background: #d1fae5; color: #065f46; }
+.badge-tb { background: #ede9fe; color: #5b21b6; }
+.badge-nd { background: #fed7aa; color: #9a3412; }
+.badge-tq { background: #fee2e2; color: #991b1b; }
+.badge-ht { background: #ccfbf1; color: #115e64; }
+.badge-dn { background: #e0e7ff; color: #3730a3; }
+.badge-qb { background: #f3e8ff; color: #6b21a8; }
+.badge-mb { background: #dbeafe; color: #1e40af; }
+.badge-mt { background: #fed7aa; color: #9a3412; }
+.table-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  margin-bottom: 24px;
+}
+.table-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.table-controls input, .table-controls select {
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+}
+.table-controls input:focus, .table-controls select:focus { border-color: var(--primary); }
+.table-scroll { max-height: 600px; overflow: auto; border-radius: 8px; }
+.insights {
+  background: linear-gradient(135deg, #fef3f7 0%, #fdf2f8 100%);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  border-left: 4px solid var(--primary);
+}
+.insights h3 { margin-bottom: 12px; color: var(--primary-dark); font-size: 15px; }
+.insights ul { list-style: none; padding-left: 0; }
+.insights li {
+  padding: 6px 0;
+  padding-left: 22px;
+  position: relative;
+  font-size: 13.5px;
+  color: #4b5563;
+}
+.insights li::before {
+  content: '▸';
+  position: absolute;
+  left: 4px;
+  color: var(--primary);
+  font-weight: bold;
+}
+.insights b { color: var(--primary-dark); }
+.footer {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+@media (max-width: 900px) {
+  .chart-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <h1>Dashboard Doanh Thu — Chuỗi Trà Sữa Hoa Sen</h1>
+  <p>Báo cáo tháng 03/2026 · 41 cửa hàng · 10 tỉnh/thành phố · Nguồn: iPOS items_report</p>
+</div>
+
+<!-- KPI CARDS -->
+<div class="section-title">Chỉ số chính (KPIs)</div>
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-label">Tổng Doanh Thu Net</div>
+    <div class="kpi-value" id="kpi-net">—</div>
+    <div class="kpi-sub" id="kpi-net-sub">—</div>
+  </div>
+  <div class="kpi-card green">
+    <div class="kpi-label">Tổng TC (Cốc bán)</div>
+    <div class="kpi-value" id="kpi-tc">—</div>
+    <div class="kpi-sub" id="kpi-tc-sub">—</div>
+  </div>
+  <div class="kpi-card blue">
+    <div class="kpi-label">ADTC (Bình quân ngày)</div>
+    <div class="kpi-value" id="kpi-adtc">—</div>
+    <div class="kpi-sub" id="kpi-adtc-sub">—</div>
+  </div>
+  <div class="kpi-card orange">
+    <div class="kpi-label">Avg TA (Giá BQ/Cốc)</div>
+    <div class="kpi-value" id="kpi-ta">—</div>
+    <div class="kpi-sub" id="kpi-ta-sub">—</div>
+  </div>
+  <div class="kpi-card purple">
+    <div class="kpi-label">Doanh Thu Gross</div>
+    <div class="kpi-value" id="kpi-gross">—</div>
+    <div class="kpi-sub" id="kpi-gross-sub">—</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-label">Số cửa hàng</div>
+    <div class="kpi-value" id="kpi-stores">—</div>
+    <div class="kpi-sub" id="kpi-stores-sub">—</div>
+  </div>
+</div>
+
+<!-- INSIGHTS -->
+<div class="insights" id="insights">
+  <h3>Nhận định nhanh (Auto Insights)</h3>
+  <ul id="insights-list"></ul>
+</div>
+
+<!-- CHARTS: Top 10 + Daily Trend -->
+<div class="section-title">Biểu đồ phân tích</div>
+<div class="chart-grid">
+  <div class="chart-card">
+    <h3>Top 10 cửa hàng theo Doanh Thu Net</h3>
+    <div class="chart-sub">Đơn vị: triệu VND</div>
+    <div class="chart-wrapper tall">
+      <canvas id="chart-top10"></canvas>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>Doanh thu theo ngày — So sánh ngày trong tuần vs Cuối tuần</h3>
+    <div class="chart-sub">Đường: Doanh thu Net theo ngày · Cột: Cuối tuần (T7+CN) tô đậm</div>
+    <div class="chart-wrapper tall">
+      <canvas id="chart-daily"></canvas>
+    </div>
+    <div class="summary-row">
+      <div class="item"><div class="label">DT BQ ngày thường</div><div class="val" id="wkd-avg">—</div></div>
+      <div class="item"><div class="label">DT BQ cuối tuần</div><div class="val" id="wkn-avg">—</div></div>
+      <div class="item"><div class="label">% chênh lệch</div><div class="val" id="wkn-diff">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- CITY & REGION -->
+<div class="section-title">Phân tích theo thành phố / vùng</div>
+<div class="chart-grid">
+  <div class="chart-card">
+    <h3>Doanh thu theo Tỉnh / Thành phố</h3>
+    <div class="chart-sub">Đơn vị: triệu VND · Sắp xếp giảm dần</div>
+    <div class="chart-wrapper tall">
+      <canvas id="chart-city"></canvas>
+    </div>
+  </div>
+  <div class="chart-card">
+    <h3>Phân bổ doanh thu theo Vùng (Miền)</h3>
+    <div class="chart-sub">Tỷ trọng doanh thu net</div>
+    <div class="chart-wrapper tall">
+      <canvas id="chart-region"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="table-card">
+  <h3 style="margin-bottom: 14px;">Bảng KPI theo Tỉnh / Thành phố</h3>
+  <div class="table-scroll">
+    <table id="table-city">
+      <thead>
+        <tr>
+          <th data-sort="city">Tỉnh/Thành phố <span class="sort-icon">⇅</span></th>
+          <th data-sort="region">Vùng <span class="sort-icon">⇅</span></th>
+          <th class="numeric" data-sort="stores">Số CH <span class="sort-icon">⇅</span></th>
+          <th class="numeric" data-sort="net">Doanh thu Net <span class="sort-icon">⇅</span></th>
+          <th class="numeric" data-sort="qty">TC (Cốc) <span class="sort-icon">⇅</span></th>
+          <th class="numeric" data-sort="avg_per_store">DT/CH <span class="sort-icon">⇅</span></th>
+          <th class="numeric" data-sort="avg_ta">Avg TA <span class="sort-icon">⇅</span></th>
+          <th class="numeric" data-sort="share">% Tổng <span class="sort-icon">⇅</span></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- STORE TABLE -->
+<div class="section-title">Bảng KPI từng cửa hàng (có thể sort & filter)</div>
+<div class="table-card">
+  <div class="table-controls">
+    <div>
+      <input type="text" id="search-input" placeholder="🔍 Tìm cửa hàng theo tên..." style="width:260px;">
+      <select id="city-filter" style="margin-left:8px;">
+        <option value="">Tất cả tỉnh/TP</option>
+      </select>
+    </div>
+    <div style="font-size: 12px; color: var(--text-muted);" id="row-count"></div>
+  </div>
+  <div class="table-scroll">
+    <table id="table-stores">
+      <thead>
+        <tr>
+          <th data-sort="rank" class="numeric">#</th>
+          <th data-sort="name">Tên cửa hàng <span class="sort-icon">⇅</span></th>
+          <th data-sort="city">Tỉnh/TP <span class="sort-icon">⇅</span></th>
+          <th data-sort="region">Vùng <span class="sort-icon">⇅</span></th>
+          <th class="numeric" data-sort="net">DT Net <span class="sort-icon">⇅</span></th>
+          <th class="numeric" data-sort="gross">DT Gross <span class="sort-icon">⇅</span></th>
+          <th class="numeric" data-sort="qty">TC (Cốc) <span class="sort-icon">⇅</span></th>
+          <th class="numeric" data-sort="adtc">ADTC <span class="sort-icon">⇅</span></th>
+          <th class="numeric" data-sort="avg_ta">Avg TA <span class="sort-icon">⇅</span></th>
+          <th class="numeric" data-sort="avg_daily_rev">DT/Ngày <span class="sort-icon">⇅</span></th>
+          <th class="numeric" data-sort="active_days">Ngày HĐ <span class="sort-icon">⇅</span></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="footer">
+  Dashboard tự sinh từ dữ liệu iPOS items_report — Maycha · Trà Sữa Hoa Sen · T3/2026
+</div>
+
+</div>
+
+<script>
+const DATA = {"kpis": {"total_net": 13416899411.0, "total_gross": 14931857750.0, "total_qty": 1300656.0, "adtc_total": 41956.645161290326, "adtc_per_store": 1023.3328088119591, "avg_ta": 10315.486501426973, "num_stores": 41, "num_days": 31, "num_cities": 10}, "weekend_weekday": {"weekend_days": 9, "weekday_days": 22, "weekend_net": 4341932668.0, "weekday_net": 9097509098.0, "weekend_qty": 407814.0, "weekday_qty": 894907.0, "weekend_avg_daily": 482436963.1111111, "weekday_avg_daily": 413523140.8181818}, "daily": [{"date": "01/03/2026", "day_label": "01/03", "weekday": "CN", "is_weekend": true, "net": 451401168.0, "qty": 41535.0}, {"date": "02/03/2026", "day_label": "02/03", "weekday": "T2", "is_weekend": false, "net": 401103852.0, "qty": 39795.0}, {"date": "03/03/2026", "day_label": "03/03", "weekday": "T3", "is_weekend": false, "net": 341894250.0, "qty": 33379.0}, {"date": "04/03/2026", "day_label": "04/03", "weekday": "T4", "is_weekend": false, "net": 479289099.0, "qty": 46667.0}, {"date": "05/03/2026", "day_label": "05/03", "weekday": "T5", "is_weekend": false, "net": 416701687.0, "qty": 40165.0}, {"date": "06/03/2026", "day_label": "06/03", "weekday": "T6", "is_weekend": false, "net": 730729198.0, "qty": 75995.0}, {"date": "07/03/2026", "day_label": "07/03", "weekday": "T7", "is_weekend": true, "net": 570114832.0, "qty": 53982.0}, {"date": "08/03/2026", "day_label": "08/03", "weekday": "CN", "is_weekend": true, "net": 637897842.0, "qty": 59010.0}, {"date": "09/03/2026", "day_label": "09/03", "weekday": "T2", "is_weekend": false, "net": 419226736.0, "qty": 41004.0}, {"date": "10/03/2026", "day_label": "10/03", "weekday": "T3", "is_weekend": false, "net": 379561430.0, "qty": 36523.0}, {"date": "11/03/2026", "day_label": "11/03", "weekday": "T4", "is_weekend": false, "net": 469641158.0, "qty": 46264.0}, {"date": "12/03/2026", "day_label": "12/03", "weekday": "T5", "is_weekend": false, "net": 396401436.0, "qty": 37907.0}, {"date": "13/03/2026", "day_label": "13/03", "weekday": "T6", "is_weekend": false, "net": 425773556.0, "qty": 41193.0}, {"date": "14/03/2026", "day_label": "14/03", "weekday": "T7", "is_weekend": true, "net": 471473477.0, "qty": 43993.0}, {"date": "15/03/2026", "day_label": "15/03", "weekday": "CN", "is_weekend": true, "net": 444883802.0, "qty": 42260.0}, {"date": "16/03/2026", "day_label": "16/03", "weekday": "T2", "is_weekend": false, "net": 378643617.0, "qty": 37374.0}, {"date": "17/03/2026", "day_label": "17/03", "weekday": "T3", "is_weekend": false, "net": 349127895.0, "qty": 33749.0}, {"date": "18/03/2026", "day_label": "18/03", "weekday": "T4", "is_weekend": false, "net": 452087734.0, "qty": 44384.0}, {"date": "19/03/2026", "day_label": "19/03", "weekday": "T5", "is_weekend": false, "net": 369548506.0, "qty": 37844.0}, {"date": "20/03/2026", "day_label": "20/03", "weekday": "T6", "is_weekend": false, "net": 394220572.0, "qty": 39939.0}, {"date": "21/03/2026", "day_label": "21/03", "weekday": "T7", "is_weekend": true, "net": 467203724.0, "qty": 44712.0}, {"date": "22/03/2026", "day_label": "22/03", "weekday": "CN", "is_weekend": true, "net": 430062459.0, "qty": 41208.0}, {"date": "23/03/2026", "day_label": "23/03", "weekday": "T2", "is_weekend": false, "net": 334318785.0, "qty": 33864.0}, {"date": "24/03/2026", "day_label": "24/03", "weekday": "T3", "is_weekend": false, "net": 339643684.0, "qty": 31991.0}, {"date": "25/03/2026", "day_label": "25/03", "weekday": "T4", "is_weekend": false, "net": 464326973.0, "qty": 44716.0}, {"date": "26/03/2026", "day_label": "26/03", "weekday": "T5", "is_weekend": false, "net": 405335243.0, "qty": 39506.0}, {"date": "27/03/2026", "day_label": "27/03", "weekday": "T6", "is_weekend": false, "net": 418985691.0, "qty": 42213.0}, {"date": "28/03/2026", "day_label": "28/03", "weekday": "T7", "is_weekend": true, "net": 438097132.0, "qty": 41212.0}, {"date": "29/03/2026", "day_label": "29/03", "weekday": "CN", "is_weekend": true, "net": 430798232.0, "qty": 39902.0}, {"date": "30/03/2026", "day_label": "30/03", "weekday": "T2", "is_weekend": false, "net": 382406753.0, "qty": 36992.0}, {"date": "31/03/2026", "day_label": "31/03", "weekday": "T3", "is_weekend": false, "net": 348541243.0, "qty": 33443.0}], "stores": [{"id": "70995", "name": "BLP Trà Sữa Hoa Sen - Bạch Mai", "city": "Hà Nội", "region": "Miền Bắc", "net": 713474822.0, "gross": 875402693.0, "qty": 81833.0, "daily_net": [25234244.0, 23053084.0, 17923784.0, 32856444.0, 29679363.0, 29286394.0, 29206202.0, 30947832.0, 27626536.0, 23135260.0, 27623270.0, 24962922.0, 25824515.0, 21099903.0, 21601710.0, 22597902.0, 21784467.0, 29214571.0, 20211777.0, 23600123.0, 21550849.0, 23084733.0, 15541413.0, 18614098.0, 23953236.0, 21341731.0, 20689333.0, 18479640.0, 19353689.0, 16518986.0, 20774924.0], "daily_qty": [2742.0, 2628.0, 2109.0, 3827.0, 3255.0, 3257.0, 3411.0, 3549.0, 3220.0, 2611.0, 3248.0, 2852.0, 2891.0, 2386.0, 2532.0, 2531.0, 2371.0, 3390.0, 2483.0, 2932.0, 2452.0, 2657.0, 1829.0, 2114.0, 2802.0, 2365.0, 2330.0, 1989.0, 1994.0, 1979.0, 2360.0], "active_days": 31, "avg_ta": 8718.668776654895, "adtc": 2639.7741935483873, "avg_daily_rev": 23015316.83870968, "avg_daily_active": 2639.7741935483873}, {"id": "71244", "name": "BLP Trà Sữa Hoa Sen - Đào Tấn", "city": "Hà Nội", "region": "Miền Bắc", "net": 574887927.0, "gross": 670163880.0, "qty": 66445.0, "daily_net": [13418077.0, 17135606.0, 16303121.0, 23025560.0, 19587183.0, 18948820.0, 20397765.0, 23252996.0, 15391295.0, 17965467.0, 23200522.0, 14930809.0, 20614139.0, 21906919.0, 19451816.0, 16249952.0, 18189572.0, 23350453.0, 18855985.0, 20863779.0, 20238670.0, 23154482.0, 15257216.0, 16065542.0, 19953216.0, 16763739.0, 17261657.0, 17603153.0, 19581402.0, 16290236.0, 17084871.0], "daily_qty": [1431.0, 1946.0, 1931.0, 2744.0, 2233.0, 2360.0, 2274.0, 2471.0, 1786.0, 2023.0, 2670.0, 1802.0, 2051.0, 2407.0, 2239.0, 1911.0, 2123.0, 2870.0, 2208.0, 2539.0, 2146.0, 2728.0, 1820.0, 1862.0, 2201.0, 1788.0, 2180.0, 2002.0, 2005.0, 1877.0, 1981.0], "active_days": 31, "avg_ta": 8652.08709458951, "adtc": 2143.3870967741937, "avg_daily_rev": 18544771.83870968, "avg_daily_active": 2143.3870967741937}, {"id": "71246", "name": "BLP Trà Sữa Hoa Sen _ Đội Cấn", "city": "Hà Nội", "region": "Miền Bắc", "net": 361212215.0, "gross": 391907878.0, "qty": 38918.0, "daily_net": [12257215.0, 10522888.0, 8862778.0, 12256668.0, 11133500.0, 18942874.0, 13512025.0, 11725548.0, 10386311.0, 10875469.0, 13276798.0, 10996373.0, 12666069.0, 12128263.0, 8976781.0, 10288288.0, 11273872.0, 12652020.0, 10752538.0, 10196718.0, 12273176.0, 9828247.0, 7669208.0, 8383405.0, 12830443.0, 12479431.0, 11693169.0, 13864780.0, 11393009.0, 8928532.0, 12900692.0], "daily_qty": [1085.0, 1134.0, 915.0, 1312.0, 1141.0, 2018.0, 1366.0, 1132.0, 1186.0, 1187.0, 1525.0, 1288.0, 1423.0, 1413.0, 933.0, 1279.0, 1163.0, 1417.0, 1317.0, 1187.0, 1406.0, 899.0, 837.0, 887.0, 1445.0, 1524.0, 1419.0, 1544.0, 1076.0, 1052.0, 1400.0], "active_days": 31, "avg_ta": 9281.366334344006, "adtc": 1255.4193548387098, "avg_daily_rev": 11652006.935483871, "avg_daily_active": 1255.4193548387098}, {"id": "94139", "name": "BLP Trà Sữa Hoa Sen _ Giảng Võ", "city": "Hà Nội", "region": "Miền Bắc", "net": 426236849.0, "gross": 505347984.0, "qty": 48478.0, "daily_net": [12482070.0, 18991214.0, 13145620.0, 20355272.0, 12169438.0, 21332547.0, 16333939.0, 17643303.0, 18987482.0, 9009184.0, 13006907.0, 13836355.0, 17901400.0, 13210271.0, 13277336.0, 11216824.0, 11836349.0, 11591134.0, 12343565.0, 10249837.0, 15114074.0, 15199367.0, 13264611.0, 10279438.0, 14539466.0, 10655812.0, 15620203.0, 9420945.0, 12560965.0, 8463611.0, 9959156.0], "daily_qty": [1304.0, 2249.0, 1514.0, 2524.0, 1404.0, 2477.0, 1891.0, 2069.0, 2695.0, 1022.0, 1483.0, 1500.0, 1921.0, 1425.0, 1528.0, 1276.0, 1395.0, 1331.0, 1551.0, 1227.0, 1649.0, 1817.0, 1656.0, 1149.0, 1665.0, 1382.0, 1851.0, 1080.0, 1436.0, 1007.0, 1138.0], "active_days": 31, "avg_ta": 8792.376933866908, "adtc": 1563.8064516129032, "avg_daily_rev": 13749575.774193548, "avg_daily_active": 1563.8064516129032}, {"id": "132540", "name": "BLP Trà Sữa Hoa Sen - Hàm Nghi", "city": "Hà Nội", "region": "Miền Bắc", "net": 220437466.0, "gross": 227705415.0, "qty": 20487.0, "daily_net": [6224037.0, 7217038.0, 6433321.0, 6162431.0, 6073075.0, 7546316.0, 8936177.0, 11157324.0, 6086987.0, 6813531.0, 8178490.0, 6105748.0, 8198980.0, 9005464.0, 5220233.0, 5039755.0, 4702196.0, 7384761.0, 6281305.0, 10890893.0, 7989540.0, 8375811.0, 5489412.0, 5259037.0, 7663531.0, 5086845.0, 8723726.0, 7726100.0, 6189612.0, 5035702.0, 6273970.0], "daily_qty": [610.0, 653.0, 559.0, 603.0, 599.0, 846.0, 815.0, 1156.0, 614.0, 606.0, 805.0, 578.0, 800.0, 815.0, 539.0, 490.0, 422.0, 750.0, 632.0, 1135.0, 688.0, 824.0, 558.0, 488.0, 689.0, 473.0, 794.0, 681.0, 518.0, 468.0, 575.0], "active_days": 31, "avg_ta": 10759.87045443452, "adtc": 660.8709677419355, "avg_daily_rev": 7110886.0, "avg_daily_active": 660.8709677419355}, {"id": "70637", "name": "BLP Trà Sữa Hoa Sen - Hoàng Văn Thái", "city": "Hà Nội", "region": "Miền Bắc", "net": 445477787.0, "gross": 518866631.0, "qty": 49216.0, "daily_net": [13898105.0, 14695091.0, 12166563.0, 15060150.0, 11164037.0, 22666224.0, 18924996.0, 17688856.0, 14999426.0, 13255103.0, 11744079.0, 9238795.0, 14593902.0, 17074764.0, 16656011.0, 13161054.0, 13749941.0, 16995804.0, 13377512.0, 14442594.0, 16981960.0, 15520319.0, 12144704.0, 12447550.0, 17389177.0, 13312161.0, 14469030.0, 14963320.0, 14368745.0, 12522579.0, 13159669.0], "daily_qty": [1447.0, 1601.0, 1461.0, 1746.0, 1321.0, 2546.0, 2077.0, 1722.0, 1594.0, 1354.0, 1299.0, 941.0, 1548.0, 1832.0, 1740.0, 1416.0, 1524.0, 1857.0, 1512.0, 1679.0, 1822.0, 1680.0, 1317.0, 1242.0, 1897.0, 1384.0, 1656.0, 1562.0, 1550.0, 1270.0, 1440.0], "active_days": 31, "avg_ta": 9051.482993335501, "adtc": 1587.6129032258063, "avg_daily_rev": 14370251.193548387, "avg_daily_active": 1587.6129032258063}, {"id": "69670", "name": "BLP Trà Sữa Hoa Sen - Hồ Tùng Mậu", "city": "Hà Nội", "region": "Miền Bắc", "net": 471718290.0, "gross": 515569409.0, "qty": 43985.0, "daily_net": [15998686.0, 17168365.0, 12085646.0, 18300407.0, 13310818.0, 17831595.0, 13291249.0, 20499497.0, 17151752.0, 12029440.0, 22994720.0, 15583085.0, 15934477.0, 14665009.0, 16526112.0, 17533613.0, 15860956.0, 23593646.0, 17127950.0, 12007590.0, 15485624.0, 14905269.0, 13273376.0, 13708522.0, 19364676.0, 13678890.0, 13956002.0, 13934879.0, 14477266.0, 12173584.0, 12223076.0], "daily_qty": [1327.0, 1606.0, 1126.0, 1661.0, 1223.0, 1728.0, 1225.0, 1687.0, 1606.0, 1060.0, 2076.0, 1395.0, 1346.0, 1212.0, 1334.0, 1588.0, 1351.0, 2161.0, 1600.0, 1202.0, 1329.0, 1271.0, 1372.0, 1157.0, 1754.0, 1153.0, 1216.0, 1199.0, 1174.0, 1193.0, 1101.0], "active_days": 31, "avg_ta": 10724.526315789473, "adtc": 1418.8709677419354, "avg_daily_rev": 15216719.032258065, "avg_daily_active": 1418.8709677419354}, {"id": "69839", "name": "Trà Sữa Hoa Sen - Chương Mỹ", "city": "Hà Nội", "region": "Miền Bắc", "net": 90172541.0, "gross": 91787616.0, "qty": 4047.0, "daily_net": [5279257.0, 2777058.0, 2170864.0, 3241269.0, 1650939.0, 2842282.0, 4096538.0, 6024221.0, 1168195.0, 2462250.0, 2341121.0, 1449462.0, 3357788.0, 4333398.0, 3090226.0, 2282047.0, 3181452.0, 3197618.0, 1774829.0, 2591147.0, 5040068.0, 3774317.0, 2027159.0, 1478364.0, 2632516.0, 2674688.0, 1601983.0, 4039584.0, 3766138.0, 1335712.0, 1355432.0], "daily_qty": [225.0, 123.0, 92.0, 148.0, 69.0, 138.0, 202.0, 279.0, 55.0, 103.0, 104.0, 63.0, 143.0, 234.0, 142.0, 95.0, 140.0, 153.0, 88.0, 99.0, 230.0, 186.0, 98.0, 91.0, 143.0, 134.0, 70.0, 175.0, 162.0, 56.0, 65.0], "active_days": 31, "avg_ta": 22281.32962688411, "adtc": 130.5483870967742, "avg_daily_rev": 2908791.64516129, "avg_daily_active": 130.5483870967742}, {"id": "83865", "name": "Trà Sữa Hoa Sen - Đại Từ", "city": "Hà Nội", "region": "Miền Bắc", "net": 432947850.0, "gross": 528351282.0, "qty": 53107.0, "daily_net": [21858256.0, 10756651.0, 15417881.0, 11670393.0, 8852862.0, 15271358.0, 18872313.0, 20536260.0, 9163579.0, 13754850.0, 14370345.0, 12923783.0, 13478866.0, 16288770.0, 16498881.0, 12472362.0, 11722108.0, 13633544.0, 10540812.0, 12005664.0, 15196956.0, 17426264.0, 10701192.0, 10675161.0, 12318355.0, 13043234.0, 12776700.0, 14451777.0, 12989984.0, 13307921.0, 16186069.0], "daily_qty": [2705.0, 1381.0, 2094.0, 1423.0, 1123.0, 2113.0, 2268.0, 2771.0, 1059.0, 1764.0, 1855.0, 1670.0, 1792.0, 1926.0, 2069.0, 1710.0, 1581.0, 1707.0, 1265.0, 1561.0, 1943.0, 2190.0, 1396.0, 1331.0, 1525.0, 1478.0, 1492.0, 1693.0, 1549.0, 1797.0, 2057.0], "active_days": 31, "avg_ta": 8152.368802606059, "adtc": 1713.1290322580646, "avg_daily_rev": 13966059.677419355, "avg_daily_active": 1713.1290322580646}, {"id": "88516", "name": "Trà Sữa Hoa Sen _Hàng Gà", "city": "Hà Nội", "region": "Miền Bắc", "net": 84989079.0, "gross": 87404235.0, "qty": 7163.0, "daily_net": [2025699.0, 1374297.0, 1762681.0, 2024395.0, 2378697.0, 3370358.0, 3067854.0, 3233187.0, 1941032.0, 3242576.0, 2522505.0, 2912880.0, 2845473.0, 2710854.0, 2826415.0, 1689829.0, 2079747.0, 3510790.0, 3351815.0, 3518889.0, 4260983.0, 2259633.0, 3855887.0, 1889675.0, 2943838.0, 1988104.0, 2055541.0, 4439205.0, 3852796.0, 1950142.0, 2149185.0], "daily_qty": [159.0, 102.0, 162.0, 196.0, 212.0, 288.0, 283.0, 300.0, 167.0, 259.0, 218.0, 276.0, 256.0, 238.0, 203.0, 182.0, 191.0, 282.0, 312.0, 306.0, 361.0, 186.0, 354.0, 156.0, 253.0, 202.0, 231.0, 361.0, 329.0, 183.0, 193.0], "active_days": 31, "avg_ta": 11865.011726930057, "adtc": 231.06451612903226, "avg_daily_rev": 2741583.193548387, "avg_daily_active": 231.06451612903226}, {"id": "141398", "name": "Trà Sữa Hoa Sen - Hoài Đức", "city": "Hà Nội", "region": "Miền Bắc", "net": 334655036.0, "gross": 339774946.0, "qty": 27213.0, "daily_net": [13006887.0, 11804885.0, 7687347.0, 9021984.0, 9315822.0, 16371335.0, 23754507.0, 20644988.0, 10239042.0, 12129929.0, 9794648.0, 10447153.0, 13044709.0, 12395657.0, 12373053.0, 7353658.0, 6714803.0, 8451276.0, 8309281.0, 8244864.0, 11696676.0, 8211157.0, 9303155.0, 10898541.0, 8064615.0, 7935046.0, 9840618.0, 9888977.0, 9332303.0, 8766013.0, 7753775.0], "daily_qty": [1060.0, 933.0, 656.0, 782.0, 815.0, 1392.0, 1973.0, 1647.0, 833.0, 1125.0, 841.0, 885.0, 1128.0, 1023.0, 1086.0, 674.0, 528.0, 691.0, 622.0, 645.0, 925.0, 703.0, 776.0, 895.0, 708.0, 642.0, 840.0, 853.0, 825.0, 731.0, 642.0], "active_days": 31, "avg_ta": 12297.61643332231, "adtc": 877.8387096774194, "avg_daily_rev": 10795323.741935484, "avg_daily_active": 877.8387096774194}, {"id": "98681", "name": "Trà Sữa Hoa Sen - Kpark", "city": "Hà Nội", "region": "Miền Bắc", "net": 559062744.0, "gross": 651213207.0, "qty": 62194.0, "daily_net": [19922403.0, 17582996.0, 16929511.0, 19609159.0, 14116130.0, 30545360.0, 21566938.0, 23358717.0, 19797862.0, 21235750.0, 21384837.0, 17465517.0, 18795860.0, 26224467.0, 18250196.0, 13447109.0, 15515646.0, 15700784.0, 14713518.0, 16461662.0, 16281344.0, 21207482.0, 15418178.0, 13843235.0, 16976737.0, 17251015.0, 16679910.0, 16355856.0, 15255686.0, 16163450.0, 16671529.0], "daily_qty": [2041.0, 2123.0, 1887.0, 2158.0, 1714.0, 3527.0, 2521.0, 2486.0, 1788.0, 2383.0, 2325.0, 1773.0, 2086.0, 2755.0, 2097.0, 1367.0, 1595.0, 1719.0, 1671.0, 1899.0, 1879.0, 2176.0, 1842.0, 1505.0, 1764.0, 1811.0, 1849.0, 1821.0, 1739.0, 1863.0, 1779.0], "active_days": 31, "avg_ta": 8989.014117117407, "adtc": 2006.258064516129, "avg_daily_rev": 18034282.06451613, "avg_daily_active": 2006.258064516129}, {"id": "145785", "name": "Trà Sữa Hoa Sen - Ngô Gia Tự", "city": "Hà Nội", "region": "Miền Bắc", "net": 351595178.0, "gross": 360892650.0, "qty": 34427.0, "daily_net": [8488247.0, 8580407.0, 6914401.0, 12822271.0, 6948985.0, 9631896.0, 13172340.0, 16521408.0, 13808342.0, 6477922.0, 11778139.0, 8511079.0, 8188692.0, 9987951.0, 12280086.0, 8943940.0, 9093572.0, 14542661.0, 11259623.0, 9578611.0, 11826144.0, 14047620.0, 9214360.0, 9838497.0, 15956362.0, 9492753.0, 12329861.0, 13263892.0, 16888187.0, 11505211.0, 10376991.0], "daily_qty": [821.0, 901.0, 607.0, 1185.0, 669.0, 869.0, 1220.0, 1618.0, 1247.0, 553.0, 1206.0, 858.0, 831.0, 1012.0, 1208.0, 911.0, 901.0, 1329.0, 1284.0, 937.0, 1225.0, 1431.0, 897.0, 890.0, 1614.0, 892.0, 1179.0, 1395.0, 1671.0, 1148.0, 1060.0], "active_days": 31, "avg_ta": 10212.77421791036, "adtc": 1110.5483870967741, "avg_daily_rev": 11341779.935483871, "avg_daily_active": 1110.5483870967741}, {"id": "100400", "name": "Trà Sữa Hoa Sen - Nguyễn An Ninh", "city": "Hà Nội", "region": "Miền Bắc", "net": 251242018.0, "gross": 269510977.0, "qty": 25174.0, "daily_net": [10442973.0, 7898695.0, 6954206.0, 8726489.0, 6143695.0, 8448940.0, 9635583.0, 11880469.0, 6888156.0, 7740941.0, 10696990.0, 6840095.0, 8127283.0, 9278714.0, 8636316.0, 7262262.0, 6643984.0, 9777015.0, 7183785.0, 8156576.0, 7538977.0, 9211385.0, 6529513.0, 5999517.0, 11315264.0, 6854480.0, 8409518.0, 8664733.0, 8486037.0, 10026872.0, 6641332.0], "daily_qty": [977.0, 795.0, 731.0, 903.0, 638.0, 852.0, 953.0, 1150.0, 718.0, 707.0, 1110.0, 621.0, 795.0, 898.0, 817.0, 774.0, 597.0, 959.0, 705.0, 715.0, 708.0, 919.0, 733.0, 572.0, 1135.0, 611.0, 849.0, 815.0, 860.0, 995.0, 680.0], "active_days": 31, "avg_ta": 9980.218399936442, "adtc": 812.0645161290323, "avg_daily_rev": 8104581.225806451, "avg_daily_active": 812.0645161290323}, {"id": "71182", "name": "Trà Sữa Hoa Sen - Nguyễn Trãi", "city": "Hà Nội", "region": "Miền Bắc", "net": 622896074.0, "gross": 714431351.0, "qty": 72735.0, "daily_net": [15679569.0, 22878814.0, 19386717.0, 24643217.0, 18511599.0, 30871053.0, 25258360.0, 30359980.0, 16991733.0, 18295923.0, 28190439.0, 22264365.0, 20151392.0, 15552362.0, 16479498.0, 20507044.0, 16509567.0, 23282298.0, 18084751.0, 16324605.0, 18501410.0, 16737393.0, 17586606.0, 16079593.0, 29203498.0, 15698627.0, 18329379.0, 14076227.0, 14810870.0, 25243897.0, 18934109.0], "daily_qty": [1710.0, 2791.0, 2166.0, 2799.0, 2048.0, 3387.0, 2686.0, 3635.0, 2047.0, 2015.0, 3260.0, 2462.0, 2422.0, 1651.0, 1884.0, 2433.0, 1961.0, 2585.0, 2099.0, 1803.0, 2000.0, 1874.0, 1957.0, 1778.0, 3133.0, 1771.0, 2147.0, 1738.0, 1856.0, 2793.0, 2159.0], "active_days": 31, "avg_ta": 8563.911101945418, "adtc": 2346.2903225806454, "avg_daily_rev": 20093421.741935484, "avg_daily_active": 2346.2903225806454}, {"id": "70715", "name": "Trà Sữa Hoa Sen - S1.10 Vinhomes Ocean Park", "city": "Hà Nội", "region": "Miền Bắc", "net": 195353451.0, "gross": 261582036.0, "qty": 18331.0, "daily_net": [6425860.0, 5445853.0, 4375177.0, 6248294.0, 6245721.0, 8012258.0, 10389935.0, 7909553.0, 6297253.0, 5667191.0, 8626001.0, 8771460.0, 6779617.0, 5629605.0, 5360041.0, 6177970.0, 4959091.0, 6985384.0, 5334504.0, 4525995.0, 7350187.0, 5660594.0, 4941125.0, 6857803.0, 7191726.0, 7095655.0, 6144868.0, 6002772.0, 6253222.0, 7071767.0, 4732562.0], "daily_qty": [702.0, 568.0, 428.0, 591.0, 538.0, 737.0, 1058.0, 657.0, 559.0, 509.0, 833.0, 889.0, 702.0, 557.0, 530.0, 565.0, 497.0, 635.0, 482.0, 478.0, 702.0, 514.0, 420.0, 529.0, 674.0, 606.0, 608.0, 464.0, 572.0, 667.0, 411.0], "active_days": 31, "avg_ta": 10656.999127161638, "adtc": 591.3225806451613, "avg_daily_rev": 6301724.225806451, "avg_daily_active": 591.3225806451613}, {"id": "83091", "name": "Trà Sữa Hoa Sen - Sài Đồng", "city": "Hà Nội", "region": "Miền Bắc", "net": 165530101.0, "gross": 183811523.0, "qty": 16611.0, "daily_net": [1883238.0, 2520689.0, 2457370.0, 3227094.0, 3297596.0, 2671775.0, 2689818.0, 2728808.0, 3815071.0, 1493576.0, 5012984.0, 2124184.0, 1655856.0, 3761565.0, 5771201.0, 10513276.0, 7863693.0, 7354107.0, 9017253.0, 6910488.0, 7913165.0, 8339867.0, 4208975.0, 6874955.0, 6508514.0, 7539276.0, 7452424.0, 9126872.0, 6813969.0, 7310049.0, 7368217.0], "daily_qty": [154.0, 234.0, 221.0, 287.0, 328.0, 230.0, 245.0, 253.0, 364.0, 128.0, 519.0, 183.0, 171.0, 388.0, 558.0, 948.0, 722.0, 707.0, 884.0, 698.0, 698.0, 885.0, 467.0, 673.0, 710.0, 803.0, 766.0, 965.0, 758.0, 761.0, 790.0], "active_days": 31, "avg_ta": 9965.089458792367, "adtc": 535.8387096774194, "avg_daily_rev": 5339680.677419355, "avg_daily_active": 535.8387096774194}, {"id": "71281", "name": "Trà Sữa Hoa Sen - Tây Mỗ", "city": "Hà Nội", "region": "Miền Bắc", "net": 504999786.0, "gross": 595967019.0, "qty": 41312.0, "daily_net": [14324634.0, 17543184.0, 11340761.0, 18694778.0, 13629801.0, 25888060.0, 17802332.0, 26553079.0, 14256925.0, 17343455.0, 17496936.0, 14584729.0, 16829126.0, 16832078.0, 19240451.0, 17259245.0, 17856714.0, 18126725.0, 16057286.0, 16580865.0, 17311492.0, 15865636.0, 13841717.0, 14205123.0, 16865526.0, 13545744.0, 10981896.0, 11519972.0, 18441606.0, 18866508.0, 13531172.0], "daily_qty": [1178.0, 1471.0, 1004.0, 1532.0, 1155.0, 2056.0, 1510.0, 2055.0, 1000.0, 1442.0, 1465.0, 1416.0, 1456.0, 1350.0, 1573.0, 1200.0, 1370.0, 1562.0, 1307.0, 1372.0, 1501.0, 1139.0, 1142.0, 1178.0, 1445.0, 1023.0, 817.0, 939.0, 1516.0, 1352.0, 954.0], "active_days": 31, "avg_ta": 12224.045943067389, "adtc": 1332.6451612903227, "avg_daily_rev": 16290315.677419355, "avg_daily_active": 1332.6451612903227}, {"id": "69712", "name": "Trà Sữa Hoa Sen - Thành Lợi", "city": "Hà Nội", "region": "Miền Bắc", "net": 123819479.0, "gross": 125920479.0, "qty": 5901.0, "daily_net": [6230998.0, 2349407.0, 0.0, 8226989.0, 2801139.0, 5243285.0, 5996483.0, 10297440.0, 2026903.0, 571940.0, 3392566.0, 3609093.0, 1977228.0, 7315816.0, 6226828.0, 2529953.0, 0.0, 5443395.0, 2773987.0, 3252833.0, 4679471.0, 4157362.0, 2497636.0, 3327672.0, 2988517.0, 5321691.0, 3130420.0, 6782206.0, 5008354.0, 3345865.0, 2577414.0], "daily_qty": [267.0, 121.0, 0.0, 381.0, 134.0, 248.0, 288.0, 469.0, 112.0, 20.0, 159.0, 167.0, 131.0, 356.0, 282.0, 116.0, 0.0, 250.0, 142.0, 178.0, 225.0, 202.0, 123.0, 153.0, 148.0, 246.0, 153.0, 301.0, 250.0, 162.0, 121.0], "active_days": 29, "avg_ta": 20982.795966785292, "adtc": 190.3548387096774, "avg_daily_rev": 3994176.7419354836, "avg_daily_active": 203.48275862068965}, {"id": "119406", "name": "Trà Sữa Hoa Sen - Thanh Niên", "city": "Hà Nội", "region": "Miền Bắc", "net": 476299843.0, "gross": 528313170.0, "qty": 50877.0, "daily_net": [19914474.0, 15260840.0, 13563933.0, 13800211.0, 11368578.0, 22261240.0, 19129052.0, 23863288.0, 15264821.0, 13358607.0, 14361276.0, 13558345.0, 16843643.0, 16605207.0, 20086393.0, 12659385.0, 12211514.0, 15346655.0, 12074228.0, 12818253.0, 11934363.0, 15867495.0, 10041933.0, 10518641.0, 15059482.0, 13377530.0, 15240662.0, 16202446.0, 18336123.0, 13407542.0, 10848106.0], "daily_qty": [2015.0, 1742.0, 1426.0, 1595.0, 1312.0, 2350.0, 2088.0, 2647.0, 1688.0, 1441.0, 1400.0, 1364.0, 1879.0, 1722.0, 2097.0, 1370.0, 1391.0, 1805.0, 1364.0, 1552.0, 1340.0, 1626.0, 1229.0, 1243.0, 1680.0, 1448.0, 1696.0, 1636.0, 1924.0, 1490.0, 1210.0], "active_days": 31, "avg_ta": 9361.791045069482, "adtc": 1641.1935483870968, "avg_daily_rev": 15364511.064516129, "avg_daily_active": 1641.1935483870968}, {"id": "92575", "name": "Trà Sữa Hoa Sen - Trâu Quỳ", "city": "Hà Nội", "region": "Miền Bắc", "net": 174477815.0, "gross": 196309781.0, "qty": 16582.0, "daily_net": [8773086.0, 5615788.0, 7105820.0, 7142814.0, 15665441.0, 12141729.0, 14524681.0, 10476420.0, 7305288.0, 6756981.0, 9497932.0, 8193905.0, 6342225.0, 11732653.0, 3243630.0, 3318452.0, 2401561.0, 3151643.0, 2494740.0, 2313844.0, 2669852.0, 2964998.0, 2532782.0, 3267959.0, 2362072.0, 2666319.0, 2823195.0, 2249238.0, 2587195.0, 2647976.0, 1705627.0], "daily_qty": [859.0, 540.0, 744.0, 724.0, 1324.0, 1173.0, 1393.0, 999.0, 765.0, 677.0, 1004.0, 855.0, 676.0, 1091.0, 273.0, 338.0, 244.0, 289.0, 222.0, 216.0, 261.0, 284.0, 242.0, 333.0, 199.0, 226.0, 268.0, 191.0, 209.0, 244.0, 139.0], "active_days": 31, "avg_ta": 10522.121276082498, "adtc": 534.9032258064516, "avg_daily_rev": 5628316.612903226, "avg_daily_active": 534.9032258064516}, {"id": "131948", "name": "Trà Sữa Hoa Sen - Văn Quán", "city": "Hà Nội", "region": "Miền Bắc", "net": 390511231.0, "gross": 441626809.0, "qty": 27288.0, "daily_net": [12450671.0, 14551644.0, 8299937.0, 15814425.0, 20311904.0, 19718961.0, 11239444.0, 16719165.0, 14115968.0, 10658435.0, 11689965.0, 14939794.0, 12286324.0, 14256239.0, 12186309.0, 11658358.0, 8822331.0, 13898507.0, 11366050.0, 10125357.0, 12889508.0, 12584760.0, 11448006.0, 10176876.0, 11630300.0, 10910212.0, 10906422.0, 11277635.0, 8330892.0, 7690930.0, 10425625.0], "daily_qty": [877.0, 1026.0, 628.0, 1140.0, 1197.0, 1270.0, 739.0, 1071.0, 1093.0, 785.0, 901.0, 1015.0, 915.0, 1072.0, 749.0, 942.0, 610.0, 1014.0, 859.0, 716.0, 950.0, 860.0, 890.0, 754.0, 719.0, 789.0, 811.0, 847.0, 601.0, 513.0, 717.0], "active_days": 31, "avg_ta": 14310.731127235415, "adtc": 880.258064516129, "avg_daily_rev": 12597136.483870968, "avg_daily_active": 880.258064516129}, {"id": "118635", "name": "Trà Sữa Hoa Sen - Vĩnh Hưng", "city": "Hà Nội", "region": "Miền Bắc", "net": 225315157.0, "gross": 239879359.0, "qty": 22073.0, "daily_net": [7390425.0, 5668497.0, 4205215.0, 9021471.0, 6769763.0, 7707655.0, 9577906.0, 10396260.0, 6852013.0, 7578820.0, 7592326.0, 7988492.0, 6214340.0, 7324961.0, 8623441.0, 7266047.0, 5954512.0, 11357175.0, 5935883.0, 6573041.0, 9762223.0, 8088468.0, 8204146.0, 4289371.0, 8565613.0, 5630537.0, 5976760.0, 6427387.0, 7272532.0, 7365243.0, 7125821.0], "daily_qty": [694.0, 566.0, 389.0, 883.0, 725.0, 674.0, 857.0, 901.0, 643.0, 669.0, 745.0, 737.0, 610.0, 708.0, 842.0, 716.0, 587.0, 1138.0, 582.0, 600.0, 880.0, 673.0, 767.0, 408.0, 892.0, 488.0, 628.0, 608.0, 658.0, 689.0, 647.0], "active_days": 31, "avg_ta": 10207.726951479182, "adtc": 712.0322580645161, "avg_daily_rev": 7268230.870967742, "avg_daily_active": 712.0322580645161}, {"id": "70942", "name": "BLP Trà Sữa Hoa Sen - Đà Nẵng", "city": "Đà Nẵng", "region": "Miền Trung", "net": 269839338.0, "gross": 292747023.0, "qty": 25440.0, "daily_net": [8756780.0, 7770407.0, 6783509.0, 12253590.0, 7563732.0, 6924131.0, 10804846.0, 16209877.0, 8642382.0, 7097284.0, 11494389.0, 8640194.0, 8023216.0, 10019726.0, 10090571.0, 8212845.0, 6373635.0, 10025303.0, 8113092.0, 8358370.0, 10251413.0, 15464951.0, 6150457.0, 6306475.0, 9108801.0, 8315500.0, 6938623.0, 7024194.0, 8374309.0, 7005015.0, 4501050.0], "daily_qty": [690.0, 764.0, 631.0, 1224.0, 680.0, 605.0, 1035.0, 1415.0, 863.0, 683.0, 1121.0, 854.0, 743.0, 909.0, 888.0, 648.0, 618.0, 983.0, 786.0, 886.0, 964.0, 1411.0, 689.0, 596.0, 928.0, 714.0, 630.0, 675.0, 819.0, 662.0, 415.0], "active_days": 31, "avg_ta": 10606.892216981132, "adtc": 820.6451612903226, "avg_daily_rev": 8704494.774193548, "avg_daily_active": 820.6451612903226}, {"id": "71443", "name": "BLP Trà Sữa Hoa Sen - Lạch Tray", "city": "Hải Phòng", "region": "Miền Bắc", "net": 478431747.0, "gross": 520443510.0, "qty": 45757.0, "daily_net": [20575533.0, 16301355.0, 12001778.0, 4939648.0, 15351988.0, 20590074.0, 17784953.0, 26211661.0, 18621521.0, 16394699.0, 20339784.0, 13367183.0, 14114374.0, 17628100.0, 17536640.0, 13321775.0, 15092516.0, 16084449.0, 12684774.0, 15529134.0, 12201140.0, 0.0, 14105567.0, 12103146.0, 16037096.0, 16725617.0, 18265573.0, 17562671.0, 14881247.0, 15837607.0, 12327814.0], "daily_qty": [1984.0, 1653.0, 1130.0, 425.0, 1353.0, 1964.0, 1799.0, 2230.0, 1840.0, 1579.0, 1907.0, 1227.0, 1320.0, 1615.0, 1623.0, 1441.0, 1394.0, 1440.0, 1395.0, 1521.0, 1276.0, 0.0, 1579.0, 1194.0, 1576.0, 1498.0, 1777.0, 1668.0, 1419.0, 1454.0, 1158.0], "active_days": 30, "avg_ta": 10455.924710973184, "adtc": 1476.032258064516, "avg_daily_rev": 15433282.161290323, "avg_daily_active": 1525.2333333333333}, {"id": "71439", "name": "BLP Trà Sữa Hoa Sen - Nguyễn Đức Cảnh", "city": "Hải Phòng", "region": "Miền Bắc", "net": 652853908.0, "gross": 697419509.0, "qty": 64755.0, "daily_net": [16770774.0, 15172222.0, 12911154.0, 18969043.0, 13777142.0, 203529961.0, 18733718.0, 14129737.0, 12233278.0, 12799675.0, 15932234.0, 14357831.0, 12357479.0, 15994790.0, 13265558.0, 12939136.0, 12169875.0, 14813345.0, 12760774.0, 14768308.0, 15513828.0, 18982323.0, 12764237.0, 12078071.0, 27950829.0, 15377008.0, 15529571.0, 13892809.0, 15023839.0, 12561091.0, 13225229.0], "daily_qty": [1549.0, 1440.0, 1161.0, 1857.0, 1213.0, 24247.0, 1531.0, 1353.0, 1129.0, 1167.0, 1548.0, 1258.0, 1160.0, 1498.0, 1235.0, 1308.0, 1174.0, 1347.0, 1245.0, 1568.0, 1456.0, 1727.0, 1273.0, 1057.0, 2603.0, 1382.0, 1407.0, 1249.0, 1362.0, 1272.0, 1152.0], "active_days": 31, "avg_ta": 10081.907312176665, "adtc": 2088.8709677419356, "avg_daily_rev": 21059803.48387097, "avg_daily_active": 2088.8709677419356}, {"id": "73177", "name": "BLP Trà Sữa Hoa Sen - Trần Nguyên Hãn", "city": "Hải Phòng", "region": "Miền Bắc", "net": 432497864.0, "gross": 492292359.0, "qty": 40694.0, "daily_net": [12570518.0, 11541137.0, 11487592.0, 14712769.0, 9594683.0, 13393271.0, 23515145.0, 19875135.0, 11826191.0, 10427168.0, 16539834.0, 12003369.0, 12773394.0, 17672564.0, 16326970.0, 14691244.0, 13100529.0, 15999939.0, 12714143.0, 10352624.0, 14956591.0, 13767797.0, 10233705.0, 10393694.0, 17066796.0, 15735000.0, 10383095.0, 17134692.0, 14367114.0, 12661318.0, 11081765.0], "daily_qty": [1165.0, 1143.0, 1060.0, 1459.0, 879.0, 1301.0, 2112.0, 1639.0, 1230.0, 950.0, 1492.0, 1154.0, 1175.0, 1678.0, 1488.0, 1450.0, 1249.0, 1496.0, 1183.0, 947.0, 1278.0, 1312.0, 1066.0, 1003.0, 1658.0, 1341.0, 922.0, 1481.0, 1294.0, 1304.0, 925.0], "active_days": 31, "avg_ta": 10628.049933651153, "adtc": 1312.7096774193549, "avg_daily_rev": 13951544.0, "avg_daily_active": 1312.7096774193549}, {"id": "129157", "name": "Trà Sữa Hoa Sen - Thủy Nguyên", "city": "Hải Phòng", "region": "Miền Bắc", "net": 62772578.0, "gross": 62719745.0, "qty": 4515.0, "daily_net": [2848039.0, 1730867.0, 1416352.0, 2356440.0, 1718680.0, 3208126.0, 3040865.0, 3017869.0, 2052548.0, 2218175.0, 1459248.0, 3000076.0, 2002090.0, 1105949.0, 2149045.0, 1297716.0, 3221069.0, 894455.0, 1453336.0, 2746130.0, 1971829.0, 3062454.0, 1057492.0, 1333969.0, 2166484.0, 2286260.0, 2678807.0, 1784959.0, 1811805.0, 1496323.0, 1096831.0], "daily_qty": [177.0, 123.0, 93.0, 170.0, 119.0, 237.0, 222.0, 202.0, 145.0, 157.0, 94.0, 198.0, 143.0, 84.0, 158.0, 91.0, 228.0, 60.0, 109.0, 183.0, 134.0, 207.0, 70.0, 88.0, 164.0, 164.0, 191.0, 134.0, 120.0, 96.0, 66.0], "active_days": 31, "avg_ta": 13903.118050941306, "adtc": 145.6451612903226, "avg_daily_rev": 2024921.8709677418, "avg_daily_active": 145.6451612903226}, {"id": "117752", "name": "Trà Sữa Hoa Sen - Vũ Yên", "city": "Hải Phòng", "region": "Miền Bắc", "net": 158150663.0, "gross": 158644285.0, "qty": 9695.0, "daily_net": [7411877.0, 0.0, 640062.0, 3923636.0, 1339342.0, 5631677.0, 6020173.0, 9243705.0, 5194431.0, 2846939.0, 1341737.0, 2820944.0, 2622262.0, 4657622.0, 4098973.0, 6638557.0, 262315.0, 2540667.0, 4474962.0, 6122214.0, 10812683.0, 6846710.0, 2501611.0, 13352167.0, 2374176.0, 5639883.0, 7285858.0, 10618290.0, 7646373.0, 13756797.0, 2669790.0], "daily_qty": [481.0, 0.0, 45.0, 237.0, 86.0, 331.0, 347.0, 562.0, 298.0, 173.0, 96.0, 173.0, 172.0, 290.0, 234.0, 406.0, 16.0, 155.0, 255.0, 344.0, 656.0, 419.0, 177.0, 800.0, 145.0, 357.0, 454.0, 671.0, 462.0, 823.0, 182.0], "active_days": 30, "avg_ta": 16312.60061887571, "adtc": 312.741935483871, "avg_daily_rev": 5101634.29032258, "avg_daily_active": 323.1666666666667}, {"id": "70593", "name": "Trà Sữa Hoa Sen - Bắc Giang", "city": "Bắc Giang", "region": "Miền Bắc", "net": 61901080.0, "gross": 60855139.0, "qty": 2742.0, "daily_net": [1279262.0, 1208253.0, 2125354.0, 3119533.0, 1693474.0, 1364531.0, 2254917.0, 2474566.0, 1657784.0, 1578398.0, 2175363.0, 927241.0, 1934054.0, 1549625.0, 1118528.0, 928413.0, 1482455.0, 1778081.0, 1531893.0, 1433947.0, 2175374.0, 1476559.0, 1234401.0, 2234762.0, 11156978.0, 1250420.0, 1830340.0, 1960177.0, 2018392.0, 1247233.0, 1015657.0], "daily_qty": [48.0, 52.0, 87.0, 149.0, 74.0, 62.0, 90.0, 127.0, 87.0, 74.0, 103.0, 44.0, 86.0, 96.0, 53.0, 34.0, 69.0, 91.0, 78.0, 69.0, 102.0, 60.0, 56.0, 98.0, 463.0, 68.0, 90.0, 89.0, 92.0, 53.0, 46.0], "active_days": 31, "avg_ta": 22575.156819839533, "adtc": 88.45161290322581, "avg_daily_rev": 1996809.0322580645, "avg_daily_active": 88.45161290322581}, {"id": "73072", "name": "Trà Sữa Hoa Sen - Hàn Thuyên ( Bắc Ninh)", "city": "Bắc Ninh", "region": "Miền Bắc", "net": 237835006.0, "gross": 257243454.0, "qty": 14331.0, "daily_net": [9043626.0, 8428350.0, 4945709.0, 6949428.0, 6390653.0, 8453735.0, 11699696.0, 12759822.0, 7396648.0, 5843587.0, 5660784.0, 5261334.0, 9197543.0, 10079604.0, 6904264.0, 5628325.0, 6401899.0, 5167254.0, 5061399.0, 7811651.0, 12138685.0, 8554669.0, 7991251.0, 7901052.0, 5882640.0, 8618242.0, 7825407.0, 7509577.0, 8894161.0, 3829893.0, 4635158.0], "daily_qty": [591.0, 565.0, 350.0, 549.0, 468.0, 433.0, 686.0, 811.0, 549.0, 410.0, 349.0, 337.0, 520.0, 614.0, 391.0, 341.0, 370.0, 350.0, 361.0, 490.0, 688.0, 530.0, 480.0, 466.0, 361.0, 469.0, 594.0, 427.0, 601.0, 302.0, 270.0], "active_days": 31, "avg_ta": 16595.841602121276, "adtc": 462.2903225806452, "avg_daily_rev": 7672096.9677419355, "avg_daily_active": 462.2903225806452}, {"id": "117237", "name": "Trà Sữa Hoa Sen - Từ Sơn", "city": "Bắc Ninh", "region": "Miền Bắc", "net": 311796134.0, "gross": 348960424.0, "qty": 30302.0, "daily_net": [13506245.0, 9241944.0, 0.0, 12120122.0, 7633939.0, 8621350.0, 8969402.0, 16159982.0, 10958805.0, 10289739.0, 15809474.0, 9419537.0, 9774057.0, 14549646.0, 12380941.0, 10248480.0, 6438629.0, 16695016.0, 6816815.0, 9407892.0, 10856091.0, 11504441.0, 10187104.0, 7861473.0, 13160494.0, 6820125.0, 8201451.0, 8670948.0, 11643088.0, 10941317.0, 9225111.0], "daily_qty": [1130.0, 880.0, 0.0, 1138.0, 753.0, 875.0, 792.0, 1664.0, 1041.0, 982.0, 1439.0, 850.0, 842.0, 1281.0, 1182.0, 975.0, 620.0, 1627.0, 598.0, 896.0, 1108.0, 1068.0, 933.0, 762.0, 1272.0, 637.0, 774.0, 723.0, 1139.0, 1039.0, 792.0], "active_days": 30, "avg_ta": 10289.622269157151, "adtc": 977.483870967742, "avg_daily_rev": 10057939.806451613, "avg_daily_active": 1010.0666666666667}, {"id": "113910", "name": "Trà Sữa Hoa Sen - Hà Tĩnh", "city": "Hà Tĩnh", "region": "Miền Trung", "net": 101939922.0, "gross": 106979390.0, "qty": 8783.0, "daily_net": [3469998.0, 2837067.0, 1957055.0, 2928705.0, 3010045.0, 2472721.0, 3716295.0, 4755034.0, 1442985.0, 1888806.0, 2584223.0, 3012558.0, 2455034.0, 2661279.0, 2551194.0, 1473380.0, 3769462.0, 4603839.0, 2971256.0, 4594586.0, 3392139.0, 2385313.0, 2096673.0, 3198820.0, 5567493.0, 3165763.0, 4177257.0, 3939076.0, 5320105.0, 4176292.0, 3925650.0], "daily_qty": [292.0, 233.0, 167.0, 241.0, 255.0, 201.0, 317.0, 393.0, 147.0, 183.0, 208.0, 242.0, 241.0, 226.0, 228.0, 131.0, 332.0, 420.0, 247.0, 418.0, 300.0, 220.0, 186.0, 273.0, 506.0, 265.0, 378.0, 356.0, 480.0, 388.0, 341.0], "active_days": 31, "avg_ta": 11606.503700330184, "adtc": 283.3225806451613, "avg_daily_rev": 3288384.580645161, "avg_daily_active": 283.3225806451613}, {"id": "139898", "name": "Trà Sữa Hoa Sen - Quỳnh Côi", "city": "Thái Bình", "region": "Miền Bắc", "net": 175092763.0, "gross": 180826498.0, "qty": 16264.0, "daily_net": [9136276.0, 8064152.0, 4660997.0, 5004011.0, 3616684.0, 4273009.0, 10815638.0, 13737895.0, 6351317.0, 4621970.0, 5544404.0, 4767309.0, 6145711.0, 7784857.0, 6753127.0, 4243513.0, 2495884.0, 4013136.0, 5762315.0, 4960112.0, 6805982.0, 8919047.0, 4551170.0, 3346750.0, 3033841.0, 3749659.0, 2600986.0, 6206304.0, 6137628.0, 4001521.0, 5207212.0], "daily_qty": [830.0, 692.0, 398.0, 511.0, 326.0, 404.0, 921.0, 1231.0, 613.0, 472.0, 513.0, 411.0, 646.0, 678.0, 628.0, 427.0, 228.0, 372.0, 529.0, 440.0, 634.0, 816.0, 511.0, 334.0, 271.0, 359.0, 276.0, 591.0, 527.0, 408.0, 419.0], "active_days": 31, "avg_ta": 10765.664227742252, "adtc": 524.6451612903226, "avg_daily_rev": 5648153.645161291, "avg_daily_active": 524.6451612903226}, {"id": "132276", "name": "Trà Sữa Hoa Sen - Kỳ Bá Thái Bình", "city": "Thái Bình", "region": "Miền Bắc", "net": 335305761.0, "gross": 394337089.0, "qty": 38564.0, "daily_net": [10508667.0, 10127068.0, 5520041.0, 10681539.0, 20544764.0, 17559174.0, 18834153.0, 15236237.0, 10914038.0, 7968361.0, 11257037.0, 7234633.0, 10498175.0, 8069879.0, 8473278.0, 8694204.0, 6200949.0, 10074818.0, 17421005.0, 16982668.0, 19721698.0, 9809939.0, 5279711.0, 6467527.0, 10279844.0, 7989418.0, 7950644.0, 10927913.0, 8540963.0, 7565401.0, 4992036.0], "daily_qty": [1056.0, 1026.0, 585.0, 1087.0, 2898.0, 2509.0, 2493.0, 1642.0, 1081.0, 848.0, 1217.0, 785.0, 1056.0, 928.0, 937.0, 1009.0, 670.0, 1132.0, 2618.0, 2488.0, 2865.0, 1066.0, 596.0, 646.0, 1093.0, 905.0, 765.0, 1085.0, 946.0, 790.0, 505.0], "active_days": 31, "avg_ta": 8694.786873768282, "adtc": 1244.0, "avg_daily_rev": 10816314.870967742, "avg_daily_active": 1244.0}, {"id": "115973", "name": "Trà Sữa Hoa Sen - Lê Thánh Tông Thái Bình", "city": "Thái Bình", "region": "Miền Bắc", "net": 305509286.0, "gross": 347587285.0, "qty": 33886.0, "daily_net": [13470976.0, 7642106.0, 7792916.0, 11847617.0, 9085966.0, 8475431.0, 12886081.0, 16693310.0, 7598026.0, 7841930.0, 8959078.0, 7373936.0, 7999835.0, 10049658.0, 11106691.0, 7414038.0, 5345364.0, 11342878.0, 6361011.0, 5491048.0, 9432332.0, 9412729.0, 5770016.0, 6545177.0, 9339891.0, 15304597.0, 17292041.0, 18624371.0, 8486889.0, 7831113.0, 6133212.0], "daily_qty": [1378.0, 840.0, 884.0, 1187.0, 813.0, 894.0, 1355.0, 1780.0, 868.0, 829.0, 987.0, 834.0, 879.0, 1072.0, 1181.0, 856.0, 551.0, 1222.0, 670.0, 622.0, 993.0, 1043.0, 697.0, 724.0, 1071.0, 2165.0, 2363.0, 2505.0, 868.0, 881.0, 723.0], "active_days": 31, "avg_ta": 9015.796671191643, "adtc": 1093.0967741935483, "avg_daily_rev": 9855138.258064516, "avg_daily_active": 1093.0967741935483}, {"id": "107184", "name": "TRÀ SỮA HOA SEN - THÁI BÌNH", "city": "Thái Bình", "region": "Miền Bắc", "net": 326397358.0, "gross": 349325597.0, "qty": 32537.0, "daily_net": [11651341.0, 9193596.0, 8746535.0, 13805964.0, 7899625.0, 9294356.0, 14418996.0, 17543844.0, 10216483.0, 10063226.0, 12994661.0, 9591274.0, 11009673.0, 10301544.0, 10454347.0, 8746415.0, 9321250.0, 11400342.0, 8951999.0, 10681184.0, 9302248.0, 9359232.0, 8592962.0, 6505175.0, 13792262.0, 8454751.0, 9613166.0, 13097001.0, 10045268.0, 10249688.0, 8351233.0], "daily_qty": [1102.0, 922.0, 911.0, 1385.0, 829.0, 905.0, 1349.0, 1698.0, 1071.0, 998.0, 1313.0, 906.0, 1073.0, 978.0, 1098.0, 964.0, 924.0, 1145.0, 878.0, 1027.0, 938.0, 920.0, 888.0, 689.0, 1262.0, 799.0, 905.0, 1213.0, 906.0, 978.0, 818.0], "active_days": 31, "avg_ta": 10031.575068383687, "adtc": 1049.5806451612902, "avg_daily_rev": 10528947.032258065, "avg_daily_active": 1049.5806451612902}, {"id": "71618", "name": "Trà Sữa Hoa Sen - Nam Định", "city": "Nam Định", "region": "Miền Bắc", "net": 62446855.0, "gross": 64368155.0, "qty": 3042.0, "daily_net": [1682294.0, 2262276.0, 1780274.0, 1584395.0, 1585765.0, 1731127.0, 3197616.0, 2798321.0, 1492989.0, 935202.0, 3203632.0, 2635162.0, 2213970.0, 2586945.0, 2414599.0, 1870687.0, 1007189.0, 2461340.0, 1964580.0, 837435.0, 2150236.0, 1498280.0, 1519320.0, 1469518.0, 2136954.0, 2284706.0, 2630919.0, 2190911.0, 2751658.0, 1875338.0, 2444855.0], "daily_qty": [64.0, 100.0, 80.0, 76.0, 90.0, 70.0, 155.0, 129.0, 75.0, 37.0, 166.0, 134.0, 99.0, 127.0, 98.0, 100.0, 45.0, 128.0, 89.0, 44.0, 94.0, 77.0, 63.0, 70.0, 92.0, 104.0, 152.0, 115.0, 124.0, 80.0, 107.0], "active_days": 31, "avg_ta": 20528.223208415515, "adtc": 98.12903225806451, "avg_daily_rev": 2014414.677419355, "avg_daily_active": 98.12903225806451}, {"id": "128964", "name": "Trà Sữa Hoa Sen - Xuân Trường", "city": "Nam Định", "region": "Miền Bắc", "net": 538025262.0, "gross": 545873766.0, "qty": 39098.0, "daily_net": [23118898.0, 21010418.0, 17821971.0, 13366477.0, 13850044.0, 19777091.0, 30605176.0, 28844693.0, 12419493.0, 15593740.0, 13254317.0, 13631730.0, 16137490.0, 20589918.0, 24452465.0, 12596107.0, 13559829.0, 12392778.0, 9732917.0, 15725811.0, 31027227.0, 17658746.0, 13991689.0, 11539456.0, 14615053.0, 15326200.0, 15838168.0, 23430384.0, 28786873.0, 15423872.0, 14147581.0], "daily_qty": [1699.0, 1608.0, 1087.0, 910.0, 978.0, 1459.0, 2129.0, 2193.0, 888.0, 1095.0, 861.0, 803.0, 1150.0, 1358.0, 1788.0, 987.0, 907.0, 779.0, 744.0, 1046.0, 2319.0, 1411.0, 1026.0, 830.0, 922.0, 925.0, 1041.0, 1568.0, 2004.0, 967.0, 934.0], "active_days": 31, "avg_ta": 13760.940764233465, "adtc": 1261.225806451613, "avg_daily_rev": 17355653.612903226, "avg_daily_active": 1261.225806451613}, {"id": "91303", "name": "Trà Sữa Hoa Sen - Quảng Bình", "city": "Quảng Bình", "region": "Miền Trung", "net": 12929113.0, "gross": 13915686.0, "qty": 833.0, "daily_net": [1141697.0, 236824.0, 141465.0, 58493.0, 409807.0, 208986.0, 284137.0, 1129331.0, 1256621.0, 419480.0, 93089.0, 642920.0, 206121.0, 798854.0, 942364.0, 440919.0, 0.0, 127115.0, 78079.0, 385539.0, 741409.0, 152573.0, 57916.0, 207045.0, 0.0, 377809.0, 524450.0, 602970.0, 233639.0, 285342.0, 914690.0], "daily_qty": [51.0, 10.0, 6.0, 10.0, 26.0, 18.0, 30.0, 67.0, 57.0, 28.0, 6.0, 47.0, 23.0, 59.0, 54.0, 20.0, 0.0, 8.0, 6.0, 32.0, 45.0, 6.0, 8.0, 14.0, 0.0, 26.0, 24.0, 42.0, 16.0, 16.0, 65.0], "active_days": 29, "avg_ta": 15521.144057623049, "adtc": 26.870967741935484, "avg_daily_rev": 417068.1612903226, "avg_daily_active": 28.724137931034484}, {"id": "144181", "name": "Trà Sữa Hoa Sen _ Tuyên Quang", "city": "Tuyên Quang", "region": "Miền Bắc", "net": 695862034.0, "gross": 715578506.0, "qty": 55021.0, "daily_net": [10849256.0, 6942819.0, 25668832.0, 38715504.0, 40509268.0, 37668132.0, 41156588.0, 42658224.0, 28389224.0, 18880451.0, 22224074.0, 25475782.0, 23657174.0, 26052027.0, 20981283.0, 17829538.0, 13957398.0, 13131013.0, 11471179.0, 15797691.0, 19266107.0, 14734037.0, 11241193.0, 11820832.0, 14380661.0, 33570765.0, 32326058.0, 22158289.0, 19484299.0, 15723264.0, 11887045.0], "daily_qty": [858.0, 510.0, 1854.0, 2908.0, 3148.0, 2944.0, 3276.0, 3150.0, 2183.0, 1415.0, 1793.0, 2060.0, 1892.0, 2031.0, 1741.0, 1354.0, 1090.0, 1028.0, 862.0, 1242.0, 1542.0, 1191.0, 844.0, 959.0, 1134.0, 4089.0, 3620.0, 1761.0, 1491.0, 1189.0, 906.0], "active_days": 31, "avg_ta": 12647.20804783628, "adtc": 1774.8709677419354, "avg_daily_rev": 22447162.387096774, "avg_daily_active": 1774.8709677419354}], "top10": [{"id": "70995", "name": "BLP Trà Sữa Hoa Sen - Bạch Mai", "city": "Hà Nội", "region": "Miền Bắc", "net": 713474822.0, "gross": 875402693.0, "qty": 81833.0, "daily_net": [25234244.0, 23053084.0, 17923784.0, 32856444.0, 29679363.0, 29286394.0, 29206202.0, 30947832.0, 27626536.0, 23135260.0, 27623270.0, 24962922.0, 25824515.0, 21099903.0, 21601710.0, 22597902.0, 21784467.0, 29214571.0, 20211777.0, 23600123.0, 21550849.0, 23084733.0, 15541413.0, 18614098.0, 23953236.0, 21341731.0, 20689333.0, 18479640.0, 19353689.0, 16518986.0, 20774924.0], "daily_qty": [2742.0, 2628.0, 2109.0, 3827.0, 3255.0, 3257.0, 3411.0, 3549.0, 3220.0, 2611.0, 3248.0, 2852.0, 2891.0, 2386.0, 2532.0, 2531.0, 2371.0, 3390.0, 2483.0, 2932.0, 2452.0, 2657.0, 1829.0, 2114.0, 2802.0, 2365.0, 2330.0, 1989.0, 1994.0, 1979.0, 2360.0], "active_days": 31, "avg_ta": 8718.668776654895, "adtc": 2639.7741935483873, "avg_daily_rev": 23015316.83870968, "avg_daily_active": 2639.7741935483873}, {"id": "144181", "name": "Trà Sữa Hoa Sen _ Tuyên Quang", "city": "Tuyên Quang", "region": "Miền Bắc", "net": 695862034.0, "gross": 715578506.0, "qty": 55021.0, "daily_net": [10849256.0, 6942819.0, 25668832.0, 38715504.0, 40509268.0, 37668132.0, 41156588.0, 42658224.0, 28389224.0, 18880451.0, 22224074.0, 25475782.0, 23657174.0, 26052027.0, 20981283.0, 17829538.0, 13957398.0, 13131013.0, 11471179.0, 15797691.0, 19266107.0, 14734037.0, 11241193.0, 11820832.0, 14380661.0, 33570765.0, 32326058.0, 22158289.0, 19484299.0, 15723264.0, 11887045.0], "daily_qty": [858.0, 510.0, 1854.0, 2908.0, 3148.0, 2944.0, 3276.0, 3150.0, 2183.0, 1415.0, 1793.0, 2060.0, 1892.0, 2031.0, 1741.0, 1354.0, 1090.0, 1028.0, 862.0, 1242.0, 1542.0, 1191.0, 844.0, 959.0, 1134.0, 4089.0, 3620.0, 1761.0, 1491.0, 1189.0, 906.0], "active_days": 31, "avg_ta": 12647.20804783628, "adtc": 1774.8709677419354, "avg_daily_rev": 22447162.387096774, "avg_daily_active": 1774.8709677419354}, {"id": "71439", "name": "BLP Trà Sữa Hoa Sen - Nguyễn Đức Cảnh", "city": "Hải Phòng", "region": "Miền Bắc", "net": 652853908.0, "gross": 697419509.0, "qty": 64755.0, "daily_net": [16770774.0, 15172222.0, 12911154.0, 18969043.0, 13777142.0, 203529961.0, 18733718.0, 14129737.0, 12233278.0, 12799675.0, 15932234.0, 14357831.0, 12357479.0, 15994790.0, 13265558.0, 12939136.0, 12169875.0, 14813345.0, 12760774.0, 14768308.0, 15513828.0, 18982323.0, 12764237.0, 12078071.0, 27950829.0, 15377008.0, 15529571.0, 13892809.0, 15023839.0, 12561091.0, 13225229.0], "daily_qty": [1549.0, 1440.0, 1161.0, 1857.0, 1213.0, 24247.0, 1531.0, 1353.0, 1129.0, 1167.0, 1548.0, 1258.0, 1160.0, 1498.0, 1235.0, 1308.0, 1174.0, 1347.0, 1245.0, 1568.0, 1456.0, 1727.0, 1273.0, 1057.0, 2603.0, 1382.0, 1407.0, 1249.0, 1362.0, 1272.0, 1152.0], "active_days": 31, "avg_ta": 10081.907312176665, "adtc": 2088.8709677419356, "avg_daily_rev": 21059803.48387097, "avg_daily_active": 2088.8709677419356}, {"id": "71182", "name": "Trà Sữa Hoa Sen - Nguyễn Trãi", "city": "Hà Nội", "region": "Miền Bắc", "net": 622896074.0, "gross": 714431351.0, "qty": 72735.0, "daily_net": [15679569.0, 22878814.0, 19386717.0, 24643217.0, 18511599.0, 30871053.0, 25258360.0, 30359980.0, 16991733.0, 18295923.0, 28190439.0, 22264365.0, 20151392.0, 15552362.0, 16479498.0, 20507044.0, 16509567.0, 23282298.0, 18084751.0, 16324605.0, 18501410.0, 16737393.0, 17586606.0, 16079593.0, 29203498.0, 15698627.0, 18329379.0, 14076227.0, 14810870.0, 25243897.0, 18934109.0], "daily_qty": [1710.0, 2791.0, 2166.0, 2799.0, 2048.0, 3387.0, 2686.0, 3635.0, 2047.0, 2015.0, 3260.0, 2462.0, 2422.0, 1651.0, 1884.0, 2433.0, 1961.0, 2585.0, 2099.0, 1803.0, 2000.0, 1874.0, 1957.0, 1778.0, 3133.0, 1771.0, 2147.0, 1738.0, 1856.0, 2793.0, 2159.0], "active_days": 31, "avg_ta": 8563.911101945418, "adtc": 2346.2903225806454, "avg_daily_rev": 20093421.741935484, "avg_daily_active": 2346.2903225806454}, {"id": "71244", "name": "BLP Trà Sữa Hoa Sen - Đào Tấn", "city": "Hà Nội", "region": "Miền Bắc", "net": 574887927.0, "gross": 670163880.0, "qty": 66445.0, "daily_net": [13418077.0, 17135606.0, 16303121.0, 23025560.0, 19587183.0, 18948820.0, 20397765.0, 23252996.0, 15391295.0, 17965467.0, 23200522.0, 14930809.0, 20614139.0, 21906919.0, 19451816.0, 16249952.0, 18189572.0, 23350453.0, 18855985.0, 20863779.0, 20238670.0, 23154482.0, 15257216.0, 16065542.0, 19953216.0, 16763739.0, 17261657.0, 17603153.0, 19581402.0, 16290236.0, 17084871.0], "daily_qty": [1431.0, 1946.0, 1931.0, 2744.0, 2233.0, 2360.0, 2274.0, 2471.0, 1786.0, 2023.0, 2670.0, 1802.0, 2051.0, 2407.0, 2239.0, 1911.0, 2123.0, 2870.0, 2208.0, 2539.0, 2146.0, 2728.0, 1820.0, 1862.0, 2201.0, 1788.0, 2180.0, 2002.0, 2005.0, 1877.0, 1981.0], "active_days": 31, "avg_ta": 8652.08709458951, "adtc": 2143.3870967741937, "avg_daily_rev": 18544771.83870968, "avg_daily_active": 2143.3870967741937}, {"id": "98681", "name": "Trà Sữa Hoa Sen - Kpark", "city": "Hà Nội", "region": "Miền Bắc", "net": 559062744.0, "gross": 651213207.0, "qty": 62194.0, "daily_net": [19922403.0, 17582996.0, 16929511.0, 19609159.0, 14116130.0, 30545360.0, 21566938.0, 23358717.0, 19797862.0, 21235750.0, 21384837.0, 17465517.0, 18795860.0, 26224467.0, 18250196.0, 13447109.0, 15515646.0, 15700784.0, 14713518.0, 16461662.0, 16281344.0, 21207482.0, 15418178.0, 13843235.0, 16976737.0, 17251015.0, 16679910.0, 16355856.0, 15255686.0, 16163450.0, 16671529.0], "daily_qty": [2041.0, 2123.0, 1887.0, 2158.0, 1714.0, 3527.0, 2521.0, 2486.0, 1788.0, 2383.0, 2325.0, 1773.0, 2086.0, 2755.0, 2097.0, 1367.0, 1595.0, 1719.0, 1671.0, 1899.0, 1879.0, 2176.0, 1842.0, 1505.0, 1764.0, 1811.0, 1849.0, 1821.0, 1739.0, 1863.0, 1779.0], "active_days": 31, "avg_ta": 8989.014117117407, "adtc": 2006.258064516129, "avg_daily_rev": 18034282.06451613, "avg_daily_active": 2006.258064516129}, {"id": "128964", "name": "Trà Sữa Hoa Sen - Xuân Trường", "city": "Nam Định", "region": "Miền Bắc", "net": 538025262.0, "gross": 545873766.0, "qty": 39098.0, "daily_net": [23118898.0, 21010418.0, 17821971.0, 13366477.0, 13850044.0, 19777091.0, 30605176.0, 28844693.0, 12419493.0, 15593740.0, 13254317.0, 13631730.0, 16137490.0, 20589918.0, 24452465.0, 12596107.0, 13559829.0, 12392778.0, 9732917.0, 15725811.0, 31027227.0, 17658746.0, 13991689.0, 11539456.0, 14615053.0, 15326200.0, 15838168.0, 23430384.0, 28786873.0, 15423872.0, 14147581.0], "daily_qty": [1699.0, 1608.0, 1087.0, 910.0, 978.0, 1459.0, 2129.0, 2193.0, 888.0, 1095.0, 861.0, 803.0, 1150.0, 1358.0, 1788.0, 987.0, 907.0, 779.0, 744.0, 1046.0, 2319.0, 1411.0, 1026.0, 830.0, 922.0, 925.0, 1041.0, 1568.0, 2004.0, 967.0, 934.0], "active_days": 31, "avg_ta": 13760.940764233465, "adtc": 1261.225806451613, "avg_daily_rev": 17355653.612903226, "avg_daily_active": 1261.225806451613}, {"id": "71281", "name": "Trà Sữa Hoa Sen - Tây Mỗ", "city": "Hà Nội", "region": "Miền Bắc", "net": 504999786.0, "gross": 595967019.0, "qty": 41312.0, "daily_net": [14324634.0, 17543184.0, 11340761.0, 18694778.0, 13629801.0, 25888060.0, 17802332.0, 26553079.0, 14256925.0, 17343455.0, 17496936.0, 14584729.0, 16829126.0, 16832078.0, 19240451.0, 17259245.0, 17856714.0, 18126725.0, 16057286.0, 16580865.0, 17311492.0, 15865636.0, 13841717.0, 14205123.0, 16865526.0, 13545744.0, 10981896.0, 11519972.0, 18441606.0, 18866508.0, 13531172.0], "daily_qty": [1178.0, 1471.0, 1004.0, 1532.0, 1155.0, 2056.0, 1510.0, 2055.0, 1000.0, 1442.0, 1465.0, 1416.0, 1456.0, 1350.0, 1573.0, 1200.0, 1370.0, 1562.0, 1307.0, 1372.0, 1501.0, 1139.0, 1142.0, 1178.0, 1445.0, 1023.0, 817.0, 939.0, 1516.0, 1352.0, 954.0], "active_days": 31, "avg_ta": 12224.045943067389, "adtc": 1332.6451612903227, "avg_daily_rev": 16290315.677419355, "avg_daily_active": 1332.6451612903227}, {"id": "71443", "name": "BLP Trà Sữa Hoa Sen - Lạch Tray", "city": "Hải Phòng", "region": "Miền Bắc", "net": 478431747.0, "gross": 520443510.0, "qty": 45757.0, "daily_net": [20575533.0, 16301355.0, 12001778.0, 4939648.0, 15351988.0, 20590074.0, 17784953.0, 26211661.0, 18621521.0, 16394699.0, 20339784.0, 13367183.0, 14114374.0, 17628100.0, 17536640.0, 13321775.0, 15092516.0, 16084449.0, 12684774.0, 15529134.0, 12201140.0, 0.0, 14105567.0, 12103146.0, 16037096.0, 16725617.0, 18265573.0, 17562671.0, 14881247.0, 15837607.0, 12327814.0], "daily_qty": [1984.0, 1653.0, 1130.0, 425.0, 1353.0, 1964.0, 1799.0, 2230.0, 1840.0, 1579.0, 1907.0, 1227.0, 1320.0, 1615.0, 1623.0, 1441.0, 1394.0, 1440.0, 1395.0, 1521.0, 1276.0, 0.0, 1579.0, 1194.0, 1576.0, 1498.0, 1777.0, 1668.0, 1419.0, 1454.0, 1158.0], "active_days": 30, "avg_ta": 10455.924710973184, "adtc": 1476.032258064516, "avg_daily_rev": 15433282.161290323, "avg_daily_active": 1525.2333333333333}, {"id": "119406", "name": "Trà Sữa Hoa Sen - Thanh Niên", "city": "Hà Nội", "region": "Miền Bắc", "net": 476299843.0, "gross": 528313170.0, "qty": 50877.0, "daily_net": [19914474.0, 15260840.0, 13563933.0, 13800211.0, 11368578.0, 22261240.0, 19129052.0, 23863288.0, 15264821.0, 13358607.0, 14361276.0, 13558345.0, 16843643.0, 16605207.0, 20086393.0, 12659385.0, 12211514.0, 15346655.0, 12074228.0, 12818253.0, 11934363.0, 15867495.0, 10041933.0, 10518641.0, 15059482.0, 13377530.0, 15240662.0, 16202446.0, 18336123.0, 13407542.0, 10848106.0], "daily_qty": [2015.0, 1742.0, 1426.0, 1595.0, 1312.0, 2350.0, 2088.0, 2647.0, 1688.0, 1441.0, 1400.0, 1364.0, 1879.0, 1722.0, 2097.0, 1370.0, 1391.0, 1805.0, 1364.0, 1552.0, 1340.0, 1626.0, 1229.0, 1243.0, 1680.0, 1448.0, 1696.0, 1636.0, 1924.0, 1490.0, 1210.0], "active_days": 31, "avg_ta": 9361.791045069482, "adtc": 1641.1935483870968, "avg_daily_rev": 15364511.064516129, "avg_daily_active": 1641.1935483870968}], "bottom5": [{"id": "91303", "name": "Trà Sữa Hoa Sen - Quảng Bình", "city": "Quảng Bình", "region": "Miền Trung", "net": 12929113.0, "gross": 13915686.0, "qty": 833.0, "daily_net": [1141697.0, 236824.0, 141465.0, 58493.0, 409807.0, 208986.0, 284137.0, 1129331.0, 1256621.0, 419480.0, 93089.0, 642920.0, 206121.0, 798854.0, 942364.0, 440919.0, 0.0, 127115.0, 78079.0, 385539.0, 741409.0, 152573.0, 57916.0, 207045.0, 0.0, 377809.0, 524450.0, 602970.0, 233639.0, 285342.0, 914690.0], "daily_qty": [51.0, 10.0, 6.0, 10.0, 26.0, 18.0, 30.0, 67.0, 57.0, 28.0, 6.0, 47.0, 23.0, 59.0, 54.0, 20.0, 0.0, 8.0, 6.0, 32.0, 45.0, 6.0, 8.0, 14.0, 0.0, 26.0, 24.0, 42.0, 16.0, 16.0, 65.0], "active_days": 29, "avg_ta": 15521.144057623049, "adtc": 26.870967741935484, "avg_daily_rev": 417068.1612903226, "avg_daily_active": 28.724137931034484}, {"id": "70593", "name": "Trà Sữa Hoa Sen - Bắc Giang", "city": "Bắc Giang", "region": "Miền Bắc", "net": 61901080.0, "gross": 60855139.0, "qty": 2742.0, "daily_net": [1279262.0, 1208253.0, 2125354.0, 3119533.0, 1693474.0, 1364531.0, 2254917.0, 2474566.0, 1657784.0, 1578398.0, 2175363.0, 927241.0, 1934054.0, 1549625.0, 1118528.0, 928413.0, 1482455.0, 1778081.0, 1531893.0, 1433947.0, 2175374.0, 1476559.0, 1234401.0, 2234762.0, 11156978.0, 1250420.0, 1830340.0, 1960177.0, 2018392.0, 1247233.0, 1015657.0], "daily_qty": [48.0, 52.0, 87.0, 149.0, 74.0, 62.0, 90.0, 127.0, 87.0, 74.0, 103.0, 44.0, 86.0, 96.0, 53.0, 34.0, 69.0, 91.0, 78.0, 69.0, 102.0, 60.0, 56.0, 98.0, 463.0, 68.0, 90.0, 89.0, 92.0, 53.0, 46.0], "active_days": 31, "avg_ta": 22575.156819839533, "adtc": 88.45161290322581, "avg_daily_rev": 1996809.0322580645, "avg_daily_active": 88.45161290322581}, {"id": "71618", "name": "Trà Sữa Hoa Sen - Nam Định", "city": "Nam Định", "region": "Miền Bắc", "net": 62446855.0, "gross": 64368155.0, "qty": 3042.0, "daily_net": [1682294.0, 2262276.0, 1780274.0, 1584395.0, 1585765.0, 1731127.0, 3197616.0, 2798321.0, 1492989.0, 935202.0, 3203632.0, 2635162.0, 2213970.0, 2586945.0, 2414599.0, 1870687.0, 1007189.0, 2461340.0, 1964580.0, 837435.0, 2150236.0, 1498280.0, 1519320.0, 1469518.0, 2136954.0, 2284706.0, 2630919.0, 2190911.0, 2751658.0, 1875338.0, 2444855.0], "daily_qty": [64.0, 100.0, 80.0, 76.0, 90.0, 70.0, 155.0, 129.0, 75.0, 37.0, 166.0, 134.0, 99.0, 127.0, 98.0, 100.0, 45.0, 128.0, 89.0, 44.0, 94.0, 77.0, 63.0, 70.0, 92.0, 104.0, 152.0, 115.0, 124.0, 80.0, 107.0], "active_days": 31, "avg_ta": 20528.223208415515, "adtc": 98.12903225806451, "avg_daily_rev": 2014414.677419355, "avg_daily_active": 98.12903225806451}, {"id": "129157", "name": "Trà Sữa Hoa Sen - Thủy Nguyên", "city": "Hải Phòng", "region": "Miền Bắc", "net": 62772578.0, "gross": 62719745.0, "qty": 4515.0, "daily_net": [2848039.0, 1730867.0, 1416352.0, 2356440.0, 1718680.0, 3208126.0, 3040865.0, 3017869.0, 2052548.0, 2218175.0, 1459248.0, 3000076.0, 2002090.0, 1105949.0, 2149045.0, 1297716.0, 3221069.0, 894455.0, 1453336.0, 2746130.0, 1971829.0, 3062454.0, 1057492.0, 1333969.0, 2166484.0, 2286260.0, 2678807.0, 1784959.0, 1811805.0, 1496323.0, 1096831.0], "daily_qty": [177.0, 123.0, 93.0, 170.0, 119.0, 237.0, 222.0, 202.0, 145.0, 157.0, 94.0, 198.0, 143.0, 84.0, 158.0, 91.0, 228.0, 60.0, 109.0, 183.0, 134.0, 207.0, 70.0, 88.0, 164.0, 164.0, 191.0, 134.0, 120.0, 96.0, 66.0], "active_days": 31, "avg_ta": 13903.118050941306, "adtc": 145.6451612903226, "avg_daily_rev": 2024921.8709677418, "avg_daily_active": 145.6451612903226}, {"id": "88516", "name": "Trà Sữa Hoa Sen _Hàng Gà", "city": "Hà Nội", "region": "Miền Bắc", "net": 84989079.0, "gross": 87404235.0, "qty": 7163.0, "daily_net": [2025699.0, 1374297.0, 1762681.0, 2024395.0, 2378697.0, 3370358.0, 3067854.0, 3233187.0, 1941032.0, 3242576.0, 2522505.0, 2912880.0, 2845473.0, 2710854.0, 2826415.0, 1689829.0, 2079747.0, 3510790.0, 3351815.0, 3518889.0, 4260983.0, 2259633.0, 3855887.0, 1889675.0, 2943838.0, 1988104.0, 2055541.0, 4439205.0, 3852796.0, 1950142.0, 2149185.0], "daily_qty": [159.0, 102.0, 162.0, 196.0, 212.0, 288.0, 283.0, 300.0, 167.0, 259.0, 218.0, 276.0, 256.0, 238.0, 203.0, 182.0, 191.0, 282.0, 312.0, 306.0, 361.0, 186.0, 354.0, 156.0, 253.0, 202.0, 231.0, 361.0, 329.0, 183.0, 193.0], "active_days": 31, "avg_ta": 11865.011726930057, "adtc": 231.06451612903226, "avg_daily_rev": 2741583.193548387, "avg_daily_active": 231.06451612903226}], "cities": [{"city": "Hà Nội", "region": "Miền Bắc", "stores": 23, "net": 8197312739.0, "qty": 834397.0, "avg_per_store": 356404901.6956522, "avg_ta": 9824.235632438755, "share": 61.09692327483158}, {"city": "Hải Phòng", "region": "Miền Bắc", "stores": 5, "net": 1784706760.0, "qty": 165416.0, "avg_per_store": 356941352.0, "avg_ta": 10789.202737341007, "share": 13.301931432360501}, {"city": "Thái Bình", "region": "Miền Bắc", "stores": 4, "net": 1142305168.0, "qty": 121251.0, "avg_per_store": 285576292.0, "avg_ta": 9420.995851580605, "share": 8.513928091787495}, {"city": "Tuyên Quang", "region": "Miền Bắc", "stores": 1, "net": 695862034.0, "qty": 55021.0, "avg_per_store": 695862034.0, "avg_ta": 12647.20804783628, "share": 5.1864593501348715}, {"city": "Nam Định", "region": "Miền Bắc", "stores": 2, "net": 600472117.0, "qty": 42140.0, "avg_per_store": 300236058.5, "avg_ta": 14249.456976744186, "share": 4.475490935764906}, {"city": "Bắc Ninh", "region": "Miền Bắc", "stores": 2, "net": 549631140.0, "qty": 44633.0, "avg_per_store": 274815570.0, "avg_ta": 12314.456568010217, "share": 4.09655855025177}, {"city": "Đà Nẵng", "region": "Miền Trung", "stores": 1, "net": 269839338.0, "qty": 25440.0, "avg_per_store": 269839338.0, "avg_ta": 10606.892216981132, "share": 2.011189990578368}, {"city": "Hà Tĩnh", "region": "Miền Trung", "stores": 1, "net": 101939922.0, "qty": 8783.0, "avg_per_store": 101939922.0, "avg_ta": 11606.503700330184, "share": 0.759787480529394}, {"city": "Bắc Giang", "region": "Miền Bắc", "stores": 1, "net": 61901080.0, "qty": 2742.0, "avg_per_store": 61901080.0, "avg_ta": 22575.156819839533, "share": 0.46136650580572797}, {"city": "Quảng Bình", "region": "Miền Trung", "stores": 1, "net": 12929113.0, "qty": 833.0, "avg_per_store": 12929113.0, "avg_ta": 15521.144057623049, "share": 0.09636438795538646}], "regions": [{"region": "Miền Bắc", "stores": 38, "net": 13032191038.0, "qty": 1265600.0, "avg_per_store": 342952395.7368421, "avg_ta": 10297.24323482933, "share": 97.13265814093685}, {"region": "Miền Trung", "stores": 3, "net": 384708373.0, "qty": 35056.0, "avg_per_store": 128236124.33333333, "avg_ta": 10974.109225239617, "share": 2.8673418590631483}], "items_top": [{"name": "Tổng", "qty": 649546.0, "net": 6700358569.0}, {"name": "SOCOLA TIRAMISU OVALTINE L", "qty": 16455.0, "net": 541589752.0}, {"name": "MATCHA TIRAMISU OVALTINE L", "qty": 16056.0, "net": 530775107.0}, {"name": "HỒNG TRÀ SỮA M", "qty": 22381.0, "net": 519319761.0}, {"name": "HỒNG TRÀ TIRAMISU OVALTINE L", "qty": 12874.0, "net": 416946622.0}, {"name": "HỒNG TRÀ SỮA L", "qty": 8658.0, "net": 271696378.0}, {"name": "MATCHA MOCHI NẾP LẠNH M", "qty": 10205.0, "net": 242015757.0}, {"name": "MATCHA MOCHI NẾP LẠNH L", "qty": 7205.0, "net": 223443524.0}, {"name": "SỮA TƯƠI TRÂN CHÂU ĐƯỜNG ĐEN M", "qty": 9161.0, "net": 219499723.0}, {"name": "OLONG NHÀI SỮA M", "qty": 8516.0, "net": 203829501.0}]};
+
+// ----- Formatters -----
+const fmtVND = (v) => {
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return new Intl.NumberFormat('vi-VN').format(Math.round(v)) + ' ₫';
+};
+const fmtVNDShort = (v) => {
+  if (v >= 1e9) return (v/1e9).toFixed(2) + ' tỷ';
+  if (v >= 1e6) return (v/1e6).toFixed(1) + ' triệu';
+  if (v >= 1e3) return (v/1e3).toFixed(0) + 'K';
+  return Math.round(v).toString();
+};
+const fmtNum = (v) => new Intl.NumberFormat('vi-VN').format(Math.round(v));
+const fmtPct = (v) => v.toFixed(1) + '%';
+
+// Render KPIs
+const k = DATA.kpis;
+document.getElementById('kpi-net').textContent = fmtVNDShort(k.total_net);
+document.getElementById('kpi-net-sub').textContent = fmtVND(k.total_net);
+document.getElementById('kpi-tc').textContent = fmtNum(k.total_qty);
+document.getElementById('kpi-tc-sub').textContent = 'Tổng số cốc bán (Items sold)';
+document.getElementById('kpi-adtc').textContent = fmtNum(k.adtc_total);
+document.getElementById('kpi-adtc-sub').textContent = `${fmtNum(k.adtc_per_store)} cốc/CH/ngày · ${k.num_days} ngày`;
+document.getElementById('kpi-ta').textContent = fmtVND(k.avg_ta);
+document.getElementById('kpi-ta-sub').textContent = 'Giá bình quân mỗi cốc';
+document.getElementById('kpi-gross').textContent = fmtVNDShort(k.total_gross);
+document.getElementById('kpi-gross-sub').textContent = fmtVND(k.total_gross);
+document.getElementById('kpi-stores').textContent = k.num_stores;
+document.getElementById('kpi-stores-sub').textContent = `${k.num_cities} tỉnh/TP · ${k.num_days} ngày`;
+
+// Weekday/weekend summary
+const ww = DATA.weekend_weekday;
+document.getElementById('wkd-avg').textContent = fmtVNDShort(ww.weekday_avg_daily);
+document.getElementById('wkn-avg').textContent = fmtVNDShort(ww.weekend_avg_daily);
+const diff = (ww.weekend_avg_daily/ww.weekday_avg_daily - 1) * 100;
+document.getElementById('wkn-diff').textContent = (diff>=0?'+':'') + diff.toFixed(1) + '%';
+
+// Auto Insights
+const insights = [];
+const top1 = DATA.top10[0];
+const top10Share = DATA.top10.reduce((s,x)=>s+x.net,0) / k.total_net * 100;
+insights.push(`Cửa hàng top 1: <b>${top1.name}</b> (${top1.city}) đạt <b>${fmtVNDShort(top1.net)} VND</b>, chiếm <b>${(top1.net/k.total_net*100).toFixed(1)}%</b> tổng doanh thu chuỗi.`);
+insights.push(`<b>Top 10 cửa hàng</b> đóng góp <b>${top10Share.toFixed(1)}%</b> tổng doanh thu — cho thấy doanh thu tập trung khá cao ở nhóm cửa hàng đầu chuỗi.`);
+const topCity = DATA.cities[0];
+insights.push(`<b>${topCity.city}</b> dẫn đầu với ${topCity.stores} cửa hàng, doanh thu <b>${fmtVNDShort(topCity.net)} VND</b> (<b>${topCity.share.toFixed(1)}%</b>). DT bình quân/CH: <b>${fmtVNDShort(topCity.avg_per_store)} VND</b>.`);
+if (diff > 5) {
+  insights.push(`Doanh thu <b>cuối tuần cao hơn ngày thường ${diff.toFixed(1)}%</b> — cần đảm bảo nhân sự, nguyên vật liệu, vận hành đỉnh điểm T7-CN.`);
+} else if (diff < -5) {
+  insights.push(`Doanh thu cuối tuần <b>thấp hơn ngày thường ${Math.abs(diff).toFixed(1)}%</b> — bất thường, cần kiểm tra nguyên nhân (chuỗi học sinh/sinh viên?).`);
+}
+const bottom = DATA.bottom5[0];
+insights.push(`Cửa hàng thấp nhất: <b>${bottom.name}</b> (${bottom.city}) chỉ đạt <b>${fmtVNDShort(bottom.net)} VND</b> (chỉ ~${(bottom.net/topCity.avg_per_store*100).toFixed(0)}% DT BQ TP dẫn đầu) — cần review vận hành hoặc cân nhắc tái cấu trúc.`);
+const region1 = DATA.regions[0];
+insights.push(`Phân bổ vùng: <b>${region1.region}</b> chiếm <b>${region1.share.toFixed(1)}%</b> tổng DT với ${region1.stores} cửa hàng. Tỷ trọng Miền Trung còn thấp, room mở rộng lớn.`);
+document.getElementById('insights-list').innerHTML = insights.map(x=>`<li>${x}</li>`).join('');
+
+// ----- Charts -----
+Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto';
+Chart.defaults.color = '#374151';
+
+// Top 10 horizontal bar
+new Chart(document.getElementById('chart-top10'), {
+  type: 'bar',
+  data: {
+    labels: DATA.top10.map(s => s.name.length > 40 ? s.name.substring(0,40)+'…' : s.name),
+    datasets: [{
+      label: 'Doanh thu Net (triệu VND)',
+      data: DATA.top10.map(s => s.net / 1e6),
+      backgroundColor: 'rgba(214, 51, 132, 0.85)',
+      borderColor: '#a02261',
+      borderWidth: 1,
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => 'DT Net: ' + fmtVND(ctx.parsed.x * 1e6),
+          afterLabel: (ctx) => {
+            const s = DATA.top10[ctx.dataIndex];
+            return ['Tỉnh: ' + s.city, 'TC: ' + fmtNum(s.qty) + ' cốc', 'Avg TA: ' + fmtVND(s.avg_ta)];
+          }
+        }
+      }
+    },
+    scales: {
+      x: { title: { display: true, text: 'Triệu VND' }, grid: { color: '#f0f0f0' } },
+      y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+    }
+  }
+});
+
+// Daily trend with weekend highlight
+const dailyLabels = DATA.daily.map(d => d.day_label + ' ' + d.weekday);
+const dailyNet = DATA.daily.map(d => d.net / 1e6);
+const wkdNet = DATA.daily.map(d => d.is_weekend ? null : d.net/1e6);
+const wknNet = DATA.daily.map(d => d.is_weekend ? d.net/1e6 : null);
+
+new Chart(document.getElementById('chart-daily'), {
+  type: 'line',
+  data: {
+    labels: dailyLabels,
+    datasets: [
+      {
+        label: 'Doanh thu Net (triệu VND)',
+        data: dailyNet,
+        borderColor: '#d63384',
+        backgroundColor: 'rgba(214, 51, 132, 0.1)',
+        fill: true,
+        tension: 0.3,
+        borderWidth: 2,
+        pointRadius: 0,
+        order: 2,
+      },
+      {
+        label: 'Ngày thường',
+        data: wkdNet,
+        backgroundColor: '#0dcaf0',
+        borderColor: '#0dcaf0',
+        showLine: false,
+        pointRadius: 5,
+        type: 'line',
+        order: 1,
+      },
+      {
+        label: 'Cuối tuần (T7+CN)',
+        data: wknNet,
+        backgroundColor: '#dc3545',
+        borderColor: '#dc3545',
+        showLine: false,
+        pointRadius: 6,
+        pointStyle: 'rectRot',
+        type: 'line',
+        order: 0,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { position: 'bottom' },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            if (ctx.parsed.y === null) return null;
+            return ctx.dataset.label + ': ' + fmtVND(ctx.parsed.y * 1e6);
+          }
+        }
+      }
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 60 } },
+      y: { title: { display: true, text: 'Triệu VND' }, beginAtZero: true, grid: { color: '#f0f0f0' } }
+    }
+  }
+});
+
+// City bar chart
+new Chart(document.getElementById('chart-city'), {
+  type: 'bar',
+  data: {
+    labels: DATA.cities.map(c => c.city),
+    datasets: [{
+      label: 'Doanh thu Net (triệu VND)',
+      data: DATA.cities.map(c => c.net / 1e6),
+      backgroundColor: DATA.cities.map(c => c.region === 'Miền Bắc' ? 'rgba(14, 165, 233, 0.85)' : 'rgba(251, 146, 60, 0.85)'),
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => 'DT Net: ' + fmtVND(ctx.parsed.x * 1e6),
+          afterLabel: (ctx) => {
+            const c = DATA.cities[ctx.dataIndex];
+            return ['Số CH: ' + c.stores, 'Tỷ trọng: ' + c.share.toFixed(1) + '%', 'DT BQ/CH: ' + fmtVNDShort(c.avg_per_store)];
+          }
+        }
+      }
+    },
+    scales: { x: { title: { display: true, text: 'Triệu VND' } } }
+  }
+});
+
+// Region doughnut
+new Chart(document.getElementById('chart-region'), {
+  type: 'doughnut',
+  data: {
+    labels: DATA.regions.map(r => `${r.region} (${r.stores} CH)`),
+    datasets: [{
+      data: DATA.regions.map(r => r.net),
+      backgroundColor: ['#0ea5e9', '#fb923c', '#10b981'],
+      borderWidth: 3,
+      borderColor: '#fff',
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { size: 13 }, padding: 14 } },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            const r = DATA.regions[ctx.dataIndex];
+            return [`${r.region}: ${fmtVND(r.net)}`, `${r.share.toFixed(1)}% tổng DT`, `Avg TA: ${fmtVND(r.avg_ta)}`];
+          }
+        }
+      }
+    }
+  }
+});
+
+// ----- City Table -----
+function badgeClass(city) {
+  const map = {'Hà Nội':'hn','Hải Phòng':'hp','Bắc Ninh':'bn','Bắc Giang':'bg','Thái Bình':'tb','Nam Định':'nd','Tuyên Quang':'tq','Hà Tĩnh':'ht','Đà Nẵng':'dn','Quảng Bình':'qb'};
+  return 'badge badge-' + (map[city] || 'hn');
+}
+function regionBadge(r) {
+  return 'badge badge-' + (r === 'Miền Bắc' ? 'mb' : 'mt');
+}
+
+const cityTbody = document.querySelector('#table-city tbody');
+let citySort = { key: 'net', dir: 'desc' };
+function renderCityTable() {
+  const arr = [...DATA.cities];
+  arr.sort((a, b) => {
+    const av = a[citySort.key], bv = b[citySort.key];
+    if (typeof av === 'string') return citySort.dir === 'asc' ? av.localeCompare(bv,'vi') : bv.localeCompare(av,'vi');
+    return citySort.dir === 'asc' ? av - bv : bv - av;
+  });
+  cityTbody.innerHTML = arr.map(c => `
+    <tr>
+      <td><span class="${badgeClass(c.city)}">${c.city}</span></td>
+      <td><span class="${regionBadge(c.region)}">${c.region}</span></td>
+      <td class="numeric">${c.stores}</td>
+      <td class="numeric"><b>${fmtVND(c.net)}</b></td>
+      <td class="numeric">${fmtNum(c.qty)}</td>
+      <td class="numeric">${fmtVNDShort(c.avg_per_store)}</td>
+      <td class="numeric">${fmtVND(c.avg_ta)}</td>
+      <td class="numeric">${c.share.toFixed(1)}%</td>
+    </tr>
+  `).join('');
+  document.querySelectorAll('#table-city thead th').forEach(th => {
+    th.classList.toggle('sorted', th.dataset.sort === citySort.key);
+  });
+}
+renderCityTable();
+document.querySelectorAll('#table-city thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.sort;
+    if (citySort.key === key) citySort.dir = citySort.dir === 'asc' ? 'desc' : 'asc';
+    else { citySort.key = key; citySort.dir = 'desc'; }
+    renderCityTable();
+  });
+});
+
+// ----- Store Table -----
+const storeTbody = document.querySelector('#table-stores tbody');
+let storeSort = { key: 'net', dir: 'desc' };
+let storeSearch = '';
+let cityFilter = '';
+
+// Populate city filter
+const cityFilterEl = document.getElementById('city-filter');
+DATA.cities.forEach(c => {
+  const o = document.createElement('option');
+  o.value = c.city;
+  o.textContent = `${c.city} (${c.stores})`;
+  cityFilterEl.appendChild(o);
+});
+
+function renderStoreTable() {
+  let arr = DATA.stores.filter(s => {
+    if (cityFilter && s.city !== cityFilter) return false;
+    if (storeSearch && !s.name.toLowerCase().includes(storeSearch.toLowerCase())) return false;
+    return true;
+  });
+  arr.sort((a, b) => {
+    if (storeSort.key === 'rank') return storeSort.dir === 'asc' ? a.net - b.net : b.net - a.net;
+    const av = a[storeSort.key], bv = b[storeSort.key];
+    if (typeof av === 'string') return storeSort.dir === 'asc' ? av.localeCompare(bv,'vi') : bv.localeCompare(av,'vi');
+    return storeSort.dir === 'asc' ? av - bv : bv - av;
+  });
+  storeTbody.innerHTML = arr.map((s, i) => `
+    <tr>
+      <td class="numeric" style="color:#9ca3af;">${i + 1}</td>
+      <td>${s.name}</td>
+      <td><span class="${badgeClass(s.city)}">${s.city}</span></td>
+      <td><span class="${regionBadge(s.region)}">${s.region}</span></td>
+      <td class="numeric"><b>${fmtVND(s.net)}</b></td>
+      <td class="numeric">${fmtVND(s.gross)}</td>
+      <td class="numeric">${fmtNum(s.qty)}</td>
+      <td class="numeric">${fmtNum(s.adtc)}</td>
+      <td class="numeric">${fmtVND(s.avg_ta)}</td>
+      <td class="numeric">${fmtVNDShort(s.avg_daily_rev)}</td>
+      <td class="numeric">${s.active_days}/${DATA.kpis.num_days}</td>
+    </tr>
+  `).join('');
+  document.getElementById('row-count').textContent = `Hiển thị ${arr.length}/${DATA.stores.length} cửa hàng`;
+  document.querySelectorAll('#table-stores thead th').forEach(th => {
+    th.classList.toggle('sorted', th.dataset.sort === storeSort.key);
+  });
+}
+renderStoreTable();
+document.querySelectorAll('#table-stores thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.sort;
+    if (storeSort.key === key) storeSort.dir = storeSort.dir === 'asc' ? 'desc' : 'asc';
+    else { storeSort.key = key; storeSort.dir = 'desc'; }
+    renderStoreTable();
+  });
+});
+document.getElementById('search-input').addEventListener('input', (e) => {
+  storeSearch = e.target.value; renderStoreTable();
+});
+document.getElementById('city-filter').addEventListener('change', (e) => {
+  cityFilter = e.target.value; renderStoreTable();
+});
+
+</script>
+</body>
+</html>
